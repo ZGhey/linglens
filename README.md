@@ -1,5 +1,9 @@
 # Linglens
 
+[![CI](https://github.com/ZGhey/linglens/actions/workflows/ci.yml/badge.svg)](https://github.com/ZGhey/linglens/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
+
 **Select a term on any web page and get it explained — in your language, grounded in the page you're reading, using your own API key.**
 
 ![Linglens demo — select a term, click the icon, get a grounded explanation, ask a follow-up, and read it in your language](docs/demo.gif)
@@ -10,14 +14,16 @@ what a term means _here_ — "runner" in a CI doc, "sink" in a streaming doc,
 "hydration" in a frontend doc. Highlight it, click the icon, and Linglens
 explains it in the context of that page, written in the language you read best.
 
-Bring your own key. Your key and your data stay on your machine; requests go
-straight from your browser to the provider _you_ choose.
+**Open source · no servers · no telemetry.** Bring your own key: it's stored
+locally and never leaves your browser except in the request _you_ trigger to the
+provider _you_ choose. Nothing goes to us — there is no "us" backend.
 
 ## Why another explainer?
 
 Full-page translators translate words but don't _explain_ a term's meaning in
-context, and they mangle code. Other AI explainers are English-only and run on
-someone else's key and someone else's cost. Linglens is different on three axes:
+context, and they mangle code. Most AI explainers are English-only and run on
+someone else's key, someone else's cost, and someone else's server. Linglens is
+different on three axes:
 
 - **Your language.** Explanations come back in the language you configure
   (English, 中文, 日本語, and more) — not just English.
@@ -27,6 +33,8 @@ someone else's key and someone else's cost. Linglens is different on three axes:
   cost estimate are shown per explanation, so you always know what you spent.
 - **A conversation, not a one-shot.** Ask a follow-up right in the popup —
   "give an example", "how is this different from X?" — and keep the thread.
+
+![The same term, explained in your language](docs/store/04-language.png)
 
 ## Features
 
@@ -43,7 +51,11 @@ someone else's key and someone else's cost. Linglens is different on three axes:
 
 ## Install
 
-### From source (available now)
+### Chrome Web Store
+
+Submitted — pending review. Until it's live, load from source below.
+
+### From source
 
 ```bash
 git clone https://github.com/ZGhey/linglens
@@ -54,10 +66,6 @@ npm run build        # outputs to dist/
 
 Then in Chrome: open `chrome://extensions`, enable **Developer mode**, click
 **Load unpacked**, and select the `dist/` folder. Pin the toolbar icon.
-
-### Chrome Web Store
-
-Coming soon.
 
 ## Quick start
 
@@ -82,6 +90,11 @@ npm run test:e2e     # builds, then Playwright drives the loaded extension
 ```
 
 Architecture notes for contributors live in [CLAUDE.md](./CLAUDE.md).
+
+## Contributing
+
+Issues and pull requests welcome. Dev setup is above; the architecture overview
+lives in [CLAUDE.md](./CLAUDE.md). CI (typecheck + unit + e2e) runs on every PR.
 
 ## License
 
