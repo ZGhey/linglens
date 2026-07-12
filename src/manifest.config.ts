@@ -9,6 +9,7 @@ export default defineManifest({
   description:
     'Explain a selected term using the meaning of the whole document it appears in.',
   minimum_chrome_version: '116',
+  homepage_url: 'https://github.com/ZGhey/linglens',
   icons: {
     16: 'src/icons/icon-16.png',
     32: 'src/icons/icon-32.png',

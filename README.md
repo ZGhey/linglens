@@ -46,7 +46,7 @@ someone else's key and someone else's cost. Linglens is different on three axes:
 ### From source (available now)
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/ZGhey/linglens
 cd linglens
 npm install
 npm run build        # outputs to dist/
