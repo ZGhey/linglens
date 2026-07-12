@@ -1,0 +1,28 @@
+{
+  "name": "linglens",
+  "version": "0.1.0",
+  "description": "Explain a selected term using the meaning of the whole document it appears in.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vite build && playwright test"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.28",
+    "@playwright/test": "^1.48.0",
+    "@types/chrome": "^0.0.278",
+    "@types/node": "^22.20.1",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
+  },
+  "dependencies": {
+    "node-html-parser": "^7.1.0"
+  }
+}

@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head><title>actions/runner: The GitHub Actions runner</title></head>
+  <body>
+    <nav>Home Docs Pricing</nav>
+    <header>Site header junk</header>
+    <main>
+      <article>
+        <h1>GitHub Actions Runner</h1>
+        <p>The runner is the application that runs a job from a GitHub Actions workflow. It is used by GitHub Actions in the hosted virtual environments, or you can self-host the runner in your own environment.</p>
+        <h2>Installation</h2>
+        <p>Download the latest runner package and configure it against your repository. The runner registers itself with GitHub and waits for jobs.</p>
+        <pre><code>./config.sh --url https://github.com/owner/repo --token ABC
+./run.sh</code></pre>
+        <h2>Architecture</h2>
+        <p>Each runner polls the service for queued jobs. When a job is dispatched the runner executes each step in sequence and reports status back.</p>
+        <h3>Self-hosted runners</h3>
+        <p>A self-hosted runner is a machine you manage that connects to GitHub and executes workflow jobs on your own hardware.</p>
+      </article>
+    </main>
+    <footer>Copyright footer junk</footer>
+  </body>
+</html>

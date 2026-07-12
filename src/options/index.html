@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Linglens — Settings</title>
+    <style>
+      body {
+        font: 14px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #1a1a1a;
+        /* Sized as a toolbar popup; renders as a plain column when opened as a tab. */
+        width: 360px;
+        margin: 0;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+      h1 { font-size: 20px; margin-bottom: 4px; }
+      .sub { color: #666; margin-top: 0; }
+      label { display: block; font-weight: 600; margin: 18px 0 6px; }
+      /* An explicit display on `label` would otherwise override the [hidden]
+         attribute's UA display:none, leaving hidden labels (e.g. Base URL for
+         non-custom providers) visible. */
+      label[hidden] { display: none; }
+      input, select {
+        width: 100%; padding: 8px 10px; font: inherit;
+        border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
+      }
+      .hint { color: #777; font-size: 12px; margin-top: 4px; }
+      #history details {
+        border: 1px solid #e2e2e2; border-radius: 6px;
+        padding: 6px 10px; margin-top: 6px;
+      }
+      #history summary { cursor: pointer; font-size: 13px; }
+      #history summary b { color: #0b5fff; }
+      #history summary .when { color: #999; font-size: 11px; }
+      #history p { margin: 8px 0 2px; font-size: 13px; white-space: pre-wrap; }
+      #history .empty { color: #999; font-size: 13px; }
+      .row { display: flex; gap: 12px; align-items: flex-end; margin-top: 24px; }
+      button {
+        font: inherit; font-weight: 600; cursor: pointer;
+        background: #0b5fff; color: #fff; border: none;
+        border-radius: 6px; padding: 9px 18px;
+      }
+      button:hover { background: #0a52db; }
+      #status { color: #15803d; font-size: 13px; }
+      .tabs { display: flex; gap: 4px; margin: 16px 0 4px; border-bottom: 1px solid #e2e2e2; }
+      .tab {
+        background: none; color: #555; font-weight: 600;
+        border: none; border-bottom: 2px solid transparent; border-radius: 0;
+        padding: 8px 12px;
+      }
+      .tab:hover { background: none; color: #1a1a1a; }
+      .tab[aria-selected='true'] { color: #0b5fff; border-bottom-color: #0b5fff; }
+      .tab-panel[hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <h1>Linglens</h1>
+    <p class="sub">Your key is stored locally and sent only to the provider you choose.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-btn-settings" type="button" role="tab" aria-selected="true">Settings</button>
+      <button class="tab" id="tab-btn-history" type="button" role="tab" aria-selected="false">History</button>
+    </div>
+
+    <div id="tab-settings" class="tab-panel" role="tabpanel">
+    <label for="provider">Provider</label>
+    <select id="provider"></select>
+
+    <label for="baseUrl" id="baseUrlLabel" hidden>Base URL</label>
+    <input
+      id="baseUrl"
+      autocomplete="off"
+      placeholder="https://host/v1"
+      hidden
+    />
+    <p class="hint" id="baseUrlHint" hidden>OpenAI-compatible endpoint. The path /chat/completions is appended.</p>
+
+    <label for="model">Model</label>
+    <select id="model"></select>
+    <input id="modelCustom" autocomplete="off" placeholder="model id" hidden />
+
+    <label>Model price (USD per 1M tokens)</label>
+    <div style="display: flex; gap: 12px">
+      <input id="priceIn" type="number" min="0" step="any" placeholder="input" />
+      <input id="priceOut" type="number" min="0" step="any" placeholder="output" />
+    </div>
+    <p class="hint" id="priceHint">
+      Used only for the cost readout. Defaults may be stale — verify against your provider's
+      pricing page. Leave both empty to hide the USD estimate.
+    </p>
+
+    <label for="apiKey">API key</label>
+    <input id="apiKey" type="password" autocomplete="off" placeholder="sk-…" />
+    <p class="hint" id="keyHint"></p>
+
+    <label for="lang">Explanation language</label>
+    <select id="lang"></select>
+    <input
+      id="langCustom"
+      autocomplete="off"
+      placeholder="e.g. Italiano, 日本語"
+      hidden
+      style="margin-top: 8px"
+    />
+
+    <label for="verbosity">Explanation length</label>
+    <select id="verbosity">
+      <option value="concise">Concise — 1-2 sentences</option>
+      <option value="detailed">Detailed — 4-6 sentences with an example</option>
+    </select>
+
+    <div class="row">
+      <button id="save" type="button">Save</button>
+      <span id="status"></span>
+    </div>
+    </div>
+
+    <div id="tab-history" class="tab-panel" role="tabpanel" hidden>
+    <label for="historyLimit" style="margin-top: 16px">Keep last N entries</label>
+    <input id="historyLimit" type="number" min="1" max="1000" step="1" style="width: 120px" />
+    <p class="hint">Oldest entries are dropped past this. Saved with the Settings tab (1–1000).</p>
+
+    <p class="hint" style="margin-top: 16px">
+      Terms you explained. Expanding an entry re-reads it from local storage — no API call.
+    </p>
+    <div id="history"></div>
+    <button
+      id="clearHistory"
+      type="button"
+      style="background: #f7f7f7; color: #333; border: 1px solid #ccc; margin-top: 8px"
+      hidden
+    >
+      Clear history
+    </button>
+    </div>
+
+    <script type="module" src="./index.ts"></script>
+  </body>
+</html>

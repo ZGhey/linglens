@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head><title>Snippet dump</title></head>
+  <body>
+    <main>
+      <h1>Config Reference</h1>
+      <p>A sink receives events from a source and writes them somewhere.</p>
+      <pre><code>sink:
+  type: kafka
+  topic: events
+  brokers:
+    - a:9092
+    - b:9092</code></pre>
+      <pre><code>source:
+  type: http
+  port: 8080</code></pre>
+      <pre><code>transform:
+  language: sql
+  query: SELECT * FROM events</code></pre>
+    </main>
+  </body>
+</html>
