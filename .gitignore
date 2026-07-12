@@ -7,3 +7,4 @@ playwright-report/
 *.zip
 SPEC.md
 .scratch/
+launch-posts.md
