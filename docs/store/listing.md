@@ -37,8 +37,8 @@ WHY LINGLENS
   (English, 中文, 日本語, and more), not just English.
 • Your key, your control — bring your own key: OpenAI, Anthropic, Google Gemini,
   DeepSeek, or any OpenAI-compatible endpoint, including a local model that never
-  leaves your machine. Real token counts and an optional cost estimate are shown
-  per explanation.
+  leaves your machine. Real provider-reported token counts are shown per
+  explanation.
 • A conversation — ask a follow-up right in the popup and keep the thread.
 
 PRIVATE BY DESIGN

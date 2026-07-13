@@ -14,7 +14,7 @@ import {
   type ProviderConfig,
   type ProviderId,
 } from '@/providers/types'
-import { activeConfig, estimateCost, priceKey, type Settings } from '@/settings'
+import { activeConfig, type Settings } from '@/settings'
 import type { ExplainRequest, ExplainResponse } from '@/messaging/types'
 
 export interface ExplainDeps {
@@ -112,9 +112,6 @@ export function createExplainService(deps: ExplainDeps): ExplainService {
         { apiKey: cfg.apiKey, model: cfg.model, baseUrl: cfg.baseUrl, signal },
         onDelta,
       )
-      // USD estimate from the user-configurable per-model price; the token
-      // counts themselves are provider-reported and always trustworthy.
-      const cost = estimateCost(result.usage, settings.modelPrices[priceKey(cfg.provider, cfg.model)])
       return {
         ok: true,
         term,
@@ -123,7 +120,6 @@ export function createExplainService(deps: ExplainDeps): ExplainService {
         targetLang,
         title: summary.title,
         usage: result.usage,
-        cost,
       }
     } catch (err) {
       if (err instanceof ProviderError) {

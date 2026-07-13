@@ -4,18 +4,9 @@
 import { PROVIDERS, PROVIDER_MAP } from '@/providers'
 import type { ProviderId } from '@/providers/types'
 import type { Verbosity } from '@/pipeline/types'
-import { DEFAULT_MODEL_PRICES, type ModelPrices } from './pricing'
 import { DEFAULT_HISTORY_LIMIT, clampHistoryLimit } from '@/history'
 
-export {
-  DEFAULT_MODEL_PRICES,
-  addUsage,
-  estimateCost,
-  formatCost,
-  priceKey,
-  type ModelPrice,
-  type ModelPrices,
-} from './pricing'
+export { addUsage } from './usage'
 
 // Provider labels and preset models are read straight off the registry
 // (`PROVIDERS` / `PROVIDER_MAP`) wherever needed, so they aren't re-exported here.
@@ -32,8 +23,6 @@ export interface Settings {
   customBaseUrl: string
   /** Default explanation length; the popup toggle overrides it per explanation. */
   verbosity: Verbosity
-  /** USD per 1M tokens keyed "provider:model"; user edits win over defaults. */
-  modelPrices: ModelPrices
   /** Max explained-term history entries to retain (oldest dropped past this). */
   historyLimit: number
 }
@@ -63,25 +52,35 @@ export const DEFAULT_SETTINGS: Settings = {
   targetLang: 'English',
   customBaseUrl: '',
   verbosity: 'concise',
-  modelPrices: { ...DEFAULT_MODEL_PRICES },
   historyLimit: DEFAULT_HISTORY_LIMIT,
 }
 
 const STORAGE_KEY = 'linglens.settings'
+
+/** Drop a stored model that is no longer one of the provider's presets (e.g. a
+ * delisted id like gemini-1.5-flash) so it snaps to a current one. The `custom`
+ * provider keeps a free-text model, so it is never snapped. */
+function snapModels(models: Record<ProviderId, string>): Record<ProviderId, string> {
+  const snapped = { ...models }
+  for (const descriptor of PROVIDERS) {
+    if (descriptor.custom) continue
+    const current = snapped[descriptor.id]
+    if (current && !descriptor.models.includes(current)) {
+      snapped[descriptor.id] = descriptor.models[0] ?? ''
+    }
+  }
+  return snapped
+}
 
 /** Merge stored settings over defaults so new fields always have a value. */
 export function mergeSettings(stored: Partial<Settings> | undefined): Settings {
   return {
     provider: stored?.provider ?? DEFAULT_SETTINGS.provider,
     apiKeys: { ...DEFAULT_SETTINGS.apiKeys, ...stored?.apiKeys },
-    models: { ...DEFAULT_SETTINGS.models, ...stored?.models },
+    models: snapModels({ ...DEFAULT_SETTINGS.models, ...stored?.models }),
     targetLang: stored?.targetLang ?? DEFAULT_SETTINGS.targetLang,
     customBaseUrl: stored?.customBaseUrl ?? DEFAULT_SETTINGS.customBaseUrl,
     verbosity: stored?.verbosity ?? DEFAULT_SETTINGS.verbosity,
-    // Defaults seed first-time users only; once saved, the stored table is
-    // authoritative so a price the user cleared stays cleared. Copied so callers
-    // that mutate settings in place never touch the shared default table.
-    modelPrices: { ...(stored?.modelPrices ?? DEFAULT_MODEL_PRICES) },
     historyLimit: clampHistoryLimit(stored?.historyLimit ?? DEFAULT_HISTORY_LIMIT),
   }
 }

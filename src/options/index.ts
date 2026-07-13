@@ -3,7 +3,7 @@
 // provider preserves each one. The `custom` provider additionally exposes a
 // user-editable base URL and a free-text model.
 
-import { loadSettings, saveSettings, priceKey, LANGUAGE_PRESETS, type Settings } from '@/settings'
+import { loadSettings, saveSettings, LANGUAGE_PRESETS, type Settings } from '@/settings'
 import { PROVIDERS, PROVIDER_MAP } from '@/providers'
 import type { ProviderId } from '@/providers/types'
 import { clampHistoryLimit, trimHistory } from '@/history'
@@ -22,8 +22,6 @@ const keyHintEl = $<HTMLParagraphElement>('keyHint')
 const langEl = $<HTMLSelectElement>('lang')
 const langCustomEl = $<HTMLInputElement>('langCustom')
 const verbosityEl = $<HTMLSelectElement>('verbosity')
-const priceInEl = $<HTMLInputElement>('priceIn')
-const priceOutEl = $<HTMLInputElement>('priceOut')
 const saveEl = $<HTMLButtonElement>('save')
 const statusEl = $<HTMLSpanElement>('status')
 const historyEl = $<HTMLDivElement>('history')
@@ -85,12 +83,10 @@ function showProvider(provider: ProviderId): void {
   } else {
     renderModelOptions(provider)
   }
-  showPrices()
 }
 
 /** Pull the visible fields for the active provider back into settings. */
 function captureProvider(provider: ProviderId): void {
-  capturePrices()
   settings.apiKeys[provider] = apiKeyEl.value.trim()
   if (PROVIDER_MAP[provider].custom) {
     settings.models[provider] = modelCustomEl.value.trim()
@@ -98,41 +94,6 @@ function captureProvider(provider: ProviderId): void {
   } else {
     settings.models[provider] = modelEl.value
   }
-}
-
-// --- Model price fields. They belong to one provider:model at a time; the key
-// currently shown is tracked so edits are captured before the fields re-render
-// for another model.
-
-let shownPriceKey: string | null = null
-
-/** Persist the visible price fields to the key they were shown for. Both fields
- * filled = a price; both empty = clear the entry (hides the USD estimate); a
- * half-filled or invalid pair keeps the stored value untouched rather than
- * silently dropping it. */
-function capturePrices(): void {
-  if (!shownPriceKey) return
-  const rawIn = priceInEl.value.trim()
-  const rawOut = priceOutEl.value.trim()
-  if (!rawIn && !rawOut) {
-    delete settings.modelPrices[shownPriceKey]
-    return
-  }
-  const input = parseFloat(rawIn)
-  const output = parseFloat(rawOut)
-  if (Number.isFinite(input) && Number.isFinite(output) && input >= 0 && output >= 0) {
-    settings.modelPrices[shownPriceKey] = { input, output }
-  }
-}
-
-/** Show the stored price for the currently selected provider:model. */
-function showPrices(): void {
-  const provider = currentProvider()
-  const model = PROVIDER_MAP[provider].custom ? modelCustomEl.value.trim() : modelEl.value
-  shownPriceKey = model ? priceKey(provider, model) : null
-  const price = shownPriceKey ? settings.modelPrices[shownPriceKey] : undefined
-  priceInEl.value = price ? String(price.input) : ''
-  priceOutEl.value = price ? String(price.output) : ''
 }
 
 /** Build the language dropdown (presets + a "Custom…" escape) and reflect the
@@ -197,15 +158,6 @@ async function init(): Promise<void> {
   })
 
   langEl.addEventListener('change', syncLangCustomVisibility)
-
-  // Selecting another model (or renaming the custom one) re-keys the price
-  // fields: capture edits under the old key, then show the new key's price.
-  const rekeyPrices = () => {
-    capturePrices()
-    showPrices()
-  }
-  modelEl.addEventListener('change', rekeyPrices)
-  modelCustomEl.addEventListener('change', rekeyPrices)
 
   saveEl.addEventListener('click', () => void save())
 

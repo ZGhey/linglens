@@ -80,16 +80,6 @@
     <select id="model"></select>
     <input id="modelCustom" autocomplete="off" placeholder="model id" hidden />
 
-    <label>Model price (USD per 1M tokens)</label>
-    <div style="display: flex; gap: 12px">
-      <input id="priceIn" type="number" min="0" step="any" placeholder="input" />
-      <input id="priceOut" type="number" min="0" step="any" placeholder="output" />
-    </div>
-    <p class="hint" id="priceHint">
-      Used only for the cost readout. Defaults may be stale — verify against your provider's
-      pricing page. Leave both empty to hide the USD estimate.
-    </p>
-
     <label for="apiKey">API key</label>
     <input id="apiKey" type="password" autocomplete="off" placeholder="sk-…" />
     <p class="hint" id="keyHint"></p>

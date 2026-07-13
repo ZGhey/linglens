@@ -50,23 +50,21 @@ describe('createExplainService', () => {
     expect(explain).toHaveBeenCalledOnce()
   })
 
-  it('estimates cost from usage and the configured model price', async () => {
-    // keyedSettings → openai:gpt-4o-mini (default price 0.15/0.60 per 1M).
+  it('surfaces the provider-reported token usage on the response', async () => {
     const explain = vi.fn().mockResolvedValue({
       text: 'x',
       usage: { inputTokens: 1_000_000, outputTokens: 1_000_000 },
     })
     const svc = createExplainService({ getSettings: async () => keyedSettings(), explain })
     const res = await svc.handle(req())
-    expect(res).toMatchObject({ ok: true, usage: { inputTokens: 1_000_000 } })
-    if (res.ok) expect(res.cost).toBeCloseTo(0.75, 10)
+    expect(res).toMatchObject({ ok: true, usage: { inputTokens: 1_000_000, outputTokens: 1_000_000 } })
   })
 
-  it('omits cost when the provider reports no usage', async () => {
+  it('omits usage when the provider reports none', async () => {
     const explain = vi.fn().mockResolvedValue({ text: 'x' })
     const svc = createExplainService({ getSettings: async () => keyedSettings(), explain })
     const res = await svc.handle(req())
-    if (res.ok) expect(res.cost).toBeUndefined()
+    if (res.ok) expect(res.usage).toBeUndefined()
   })
 
   it('passes a follow-up thread through to the provider payload', async () => {

@@ -55,9 +55,6 @@ export type ExplainResponse =
       title: string
       /** Provider-reported token counts; absent when the endpoint sends none. */
       usage?: TokenUsage
-      /** Estimated USD for this call, from the user-configurable per-model
-       * prices; absent when usage or a price is missing. */
-      cost?: number
     }
   | { ok: false; error: ExplainError }
 

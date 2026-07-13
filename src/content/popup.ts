@@ -4,7 +4,6 @@
 import type { ErrorKind, ExplainError } from '@/messaging/types'
 import type { FollowUpTurn, Verbosity } from '@/pipeline/types'
 import type { TokenUsage } from '@/providers/types'
-import { formatCost } from '@/settings/pricing'
 import { ShadowHost } from './shadow-host'
 
 /** Optional extras for the finished-explanation card. */
@@ -15,8 +14,6 @@ export interface ExplanationOptions {
   onToggleVerbosity?: (verbosity: Verbosity) => void
   /** Token counts shown in the footer; cumulative across the popup's thread. */
   usage?: TokenUsage
-  /** Estimated USD (user-configured per-model price); appended to the footer. */
-  cost?: number
   /** Completed follow-up turns rendered under the original explanation. */
   thread?: FollowUpTurn[]
   /** Called with the typed question; presence renders the follow-up input. */
@@ -243,8 +240,7 @@ export class Popup extends ShadowHost {
       const meta = document.createElement('div')
       meta.className = 'cl-usage'
       const fmt = (n: number) => n.toLocaleString('en-US')
-      const cost = opts.cost !== undefined ? ` · ${formatCost(opts.cost)}` : ''
-      meta.textContent = `↑ ${fmt(opts.usage.inputTokens)} in · ↓ ${fmt(opts.usage.outputTokens)} out${cost}`
+      meta.textContent = `↑ ${fmt(opts.usage.inputTokens)} in · ↓ ${fmt(opts.usage.outputTokens)} out`
       this.card.appendChild(meta)
     }
 

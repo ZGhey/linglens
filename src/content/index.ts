@@ -49,7 +49,7 @@ function closeActivePort(): void {
 const MAX_FOLLOW_UPS = 8
 
 /** Everything one popup accumulated: the original explanation, its follow-up
- *  thread, and running usage/cost totals. Dies with the popup. */
+ *  thread, and the running token-usage total. Dies with the popup. */
 interface PopupSession {
   term: string
   anchor: Anchor
@@ -60,7 +60,6 @@ interface PopupSession {
   explanation: string
   turns: FollowUpTurn[]
   usage?: TokenUsage
-  cost?: number
 }
 
 function openSettings(): void {
@@ -145,7 +144,6 @@ function explainSelection(
           explanation: res.explanation,
           turns: [],
           usage: res.usage,
-          cost: res.cost,
         }
         renderSession(active, session)
       } else {
@@ -209,7 +207,6 @@ function renderSession(active: Popup, session: PopupSession): void {
         ? (v) => explainSelection(session.term, session.anchor, v, session.hint, session.targetLang)
         : undefined,
     usage: session.usage,
-    cost: session.cost,
     thread: session.turns,
     onFollowUp:
       session.turns.length < MAX_FOLLOW_UPS
@@ -241,10 +238,9 @@ function sendFollowUp(active: Popup, session: PopupSession, question: string): v
     onResult: (res) => {
       if (res.ok) {
         session.turns.push({ question, answer: res.explanation })
-        // Running totals; a turn without provider-reported usage leaves the
-        // totals unchanged rather than inventing numbers.
+        // Running total; a turn without provider-reported usage leaves it
+        // unchanged rather than inventing numbers.
         session.usage = addUsage(session.usage, res.usage)
-        if (res.cost !== undefined) session.cost = (session.cost ?? 0) + res.cost
         renderSession(active, session)
       } else {
         // Keep the thread on screen; restore the input, then surface the error.

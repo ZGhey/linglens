@@ -29,8 +29,8 @@ different on three axes:
   (English, 中文, 日本語, and more) — not just English.
 - **Your key, your control.** BYOK: OpenAI, Anthropic, Google Gemini, DeepSeek,
   or any OpenAI-compatible endpoint — including a **local model** that never
-  leaves your machine. Real provider-reported token counts and an optional USD
-  cost estimate are shown per explanation, so you always know what you spent.
+  leaves your machine. Real provider-reported token counts are shown per
+  explanation, so you always know exactly what each answer used.
 - **A conversation, not a one-shot.** Ask a follow-up right in the popup —
   "give an example", "how is this different from X?" — and keep the thread.
 
@@ -42,12 +42,11 @@ different on three axes:
   LLM**, so an accidental highlight never costs a token.
 - Streaming answers rendered in a floating dark-glass popup that reads on any
   page (light or dark).
-- Concise ↔ detailed length toggle; per-explanation token + cost readout.
-- Follow-up thread with running usage/cost totals.
+- Concise ↔ detailed length toggle; per-explanation token readout.
+- Follow-up thread with running token-usage totals.
 - Local, searchable history of the terms you've explained (no API call to
   re-read), with a configurable cap.
-- Configure provider, model, key, language, length, and per-model prices from a
-  toolbar popup.
+- Configure provider, model, key, language, and length from a toolbar popup.
 
 ## Install
 

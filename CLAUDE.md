@@ -31,7 +31,7 @@ Four processes, split so API keys never enter page context:
 - **Content script** (`src/content/`) — turns a selection into a floating
   **shadow-DOM popup** (`popup.ts`; page CSS can't bleed in). Opens a
   `chrome.runtime` port per explanation and streams token deltas into the card.
-  `PopupSession` holds all per-popup state (thread, running usage/cost); the
+  `PopupSession` holds all per-popup state (thread, running token usage); the
   worker is stateless, so **follow-up requests carry the whole thread**, and
   verbosity + language are pinned into the session so mid-session setting changes
   don't shift an ongoing thread. `activePort` is disconnected on dismiss/replace
@@ -64,10 +64,11 @@ Four processes, split so API keys never enter page context:
   as unit-test seams. Errors are typed `ProviderError` (`ErrorKind`) and never
   swallowed.
 - **Settings** (`src/settings/`) — `chrome.storage.local`. Labels/models are
-  derived from the provider registry (one source of truth). `pricing.ts` holds
-  **user-editable USD prices per `provider:model`** (per 1M tokens), seeded from a
-  possibly-stale default table; the worker computes cost from real usage, and USD
-  is hidden when no price is set. `src/history/` persists explained terms.
+  derived from the provider registry (one source of truth). `usage.ts` holds the
+  token-usage helper (`addUsage`); usage counts shown in the UI are always
+  provider-reported and **never converted to a currency** (vendor prices go stale
+  and add upkeep — a deliberate non-feature). `src/history/` persists explained
+  terms.
 
 The content↔worker wire contract lives in `src/messaging/types.ts`
 (`ExplainRequest`/`ExplainResponse`, `ExplainStreamMessage`, `EXPLAIN_PORT`).
