@@ -53,6 +53,21 @@ describe('Popup error rendering (ticket 08)', () => {
     popup.renderError('x', { kind: 'unknown', message: '' })
     expect(shadowOf(popup).querySelector('.cl-spinner')).toBeNull()
   })
+
+  it('shows the specific backend message for an unknown error instead of the generic copy', () => {
+    const popup = new Popup()
+    popup.showAt(10, 10)
+    popup.renderError('x', { kind: 'unknown', message: 'The provider returned an empty response.' })
+    const text = shadowOf(popup).querySelector('.cl-error')?.textContent ?? ''
+    expect(text).toContain('empty response')
+  })
+
+  it('falls back to the generic copy for an unknown error with no message', () => {
+    const popup = new Popup()
+    popup.showAt(10, 10)
+    popup.renderError('x', { kind: 'unknown', message: '' })
+    expect(shadowOf(popup).querySelector('.cl-error')?.textContent).toContain('Something went wrong')
+  })
 })
 
 describe('Popup follow-up thread', () => {

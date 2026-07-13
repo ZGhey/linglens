@@ -33,6 +33,15 @@ const ERROR_COPY: Record<ErrorKind, string> = {
   unknown: 'Something went wrong. Please try again.',
 }
 
+/** The copy to show for an error. Curated per-kind copy wins for the actionable
+ * kinds, but the open-ended `unknown` kind prefers a specific backend message
+ * (e.g. "The provider returned an empty response.") when one is present — that
+ * is far more diagnostic than the generic fallback. */
+function errorText(error: ExplainError): string {
+  if (error.kind === 'unknown' && error.message.trim()) return error.message
+  return ERROR_COPY[error.kind]
+}
+
 /** Key errors are fixable in settings, so we offer a shortcut button for them. */
 const FIXABLE_IN_SETTINGS: ReadonlySet<ErrorKind> = new Set(['missing-key', 'invalid-key'])
 
@@ -302,7 +311,7 @@ export class Popup extends ShadowHost {
     this.streamBody = null
     const err = document.createElement('div')
     err.className = 'cl-followup-error'
-    err.textContent = ERROR_COPY[error.kind] ?? error.message
+    err.textContent = errorText(error)
     this.card.appendChild(err)
     if (FIXABLE_IN_SETTINGS.has(error.kind) && onOpenSettings) {
       const btn = document.createElement('button')
@@ -321,7 +330,7 @@ export class Popup extends ShadowHost {
 
     const err = document.createElement('div')
     err.className = 'cl-error'
-    err.textContent = ERROR_COPY[error.kind] ?? error.message
+    err.textContent = errorText(error)
     this.card.appendChild(err)
 
     if (FIXABLE_IN_SETTINGS.has(error.kind) && onOpenSettings) {
