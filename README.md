@@ -16,7 +16,10 @@ explains it in the context of that page, written in the language you read best.
 
 **Open source · no servers · no telemetry.** Bring your own key: it's stored
 locally and never leaves your browser except in the request _you_ trigger to the
-provider _you_ choose. Nothing goes to us — there is no "us" backend.
+provider _you_ choose. Nothing goes to us — there is no "us" backend. (One caveat
+you own, not us: a provider's _free_ tier may train on your prompts — Google
+Gemini's does, its paid tier doesn't. Use a paid key or a local model if that
+matters. See [PRIVACY.md](./PRIVACY.md).)
 
 ## Why another explainer?
 

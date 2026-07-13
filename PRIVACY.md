@@ -15,8 +15,8 @@ extension.
 
 - **Your API key(s)** — one per provider you configure. Stored locally; used
   only to authenticate the requests you trigger to the provider you selected.
-- **Your settings** — chosen provider, model, base URL, target language,
-  explanation length, and per-model prices.
+- **Your settings** — chosen provider, model, base URL, target language, and
+  explanation length.
 - **Your history** — the terms you explained, their explanations, the page
   title/URL, and a timestamp, capped at the limit you set. Stored locally so
   you can re-read them without another API call; never uploaded.
@@ -48,6 +48,11 @@ identifiers, no analytics — is attached.
 policy.** Which provider receives your data is entirely your choice (OpenAI,
 Anthropic, Google Gemini, DeepSeek, or any OpenAI-compatible endpoint you
 configure, including a local model that never leaves your machine).
+
+Note that a provider's **free tier may use your prompts to train or improve
+their products** — Google's Gemini free tier does this, for example, while its
+paid tier does not. This is the provider's policy, not Linglens's; check your
+provider's terms, use a paid key, or run a local model if that matters to you.
 
 ## What Linglens does NOT do
 
