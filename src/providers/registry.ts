@@ -40,14 +40,17 @@ export const PROVIDERS: readonly ProviderDescriptor[] = [
     label: 'DeepSeek',
     wire: 'openai',
     baseUrl: 'https://api.deepseek.com',
-    models: ['deepseek-chat', 'deepseek-reasoner'],
+    // V4 lineup. The old deepseek-chat / deepseek-reasoner ids are deprecated
+    // 2026-07-24 (both map to v4-flash's non-thinking / thinking modes).
+    models: ['deepseek-v4-flash', 'deepseek-v4-pro'],
   },
   {
     id: 'gemini',
     label: 'Google Gemini',
     wire: 'gemini',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
+    // 1.5 is delisted and 2.0 was shut down 2026-06-01; 2.5 is the current line.
+    models: ['gemini-2.5-flash', 'gemini-2.5-pro'],
   },
   {
     id: 'anthropic',

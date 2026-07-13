@@ -29,10 +29,10 @@ describe('registry', () => {
 describe('geminiProvider', () => {
   it('sends model + key in the URL and parses the candidate text', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(geminiOk('解释'))
-    const out = await geminiProvider.explain(payload, { apiKey: 'g-key', model: 'gemini-1.5-flash', fetchImpl })
+    const out = await geminiProvider.explain(payload, { apiKey: 'g-key', model: 'gemini-2.5-flash', fetchImpl })
     expect(out.text).toBe('解释')
     const [url, init] = fetchImpl.mock.calls[0]
-    expect(url).toContain('gemini-1.5-flash:generateContent')
+    expect(url).toContain('gemini-2.5-flash:generateContent')
     expect(url).toContain('key=g-key')
     const body = JSON.parse(init.body)
     expect(body.contents[0].parts[0].text).toContain('sink')
