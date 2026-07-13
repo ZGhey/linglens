@@ -1,6 +1,6 @@
 {
   "name": "linglens",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Explain a selected term using the meaning of the whole document it appears in.",
   "type": "module",
   "license": "MIT",

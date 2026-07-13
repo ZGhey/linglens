@@ -5,9 +5,10 @@ import { defineManifest } from '@crxjs/vite-plugin'
 export default defineManifest({
   manifest_version: 3,
   name: 'Linglens',
-  version: '0.1.0',
+  version: '0.1.1',
+  // Kept in step with the Chrome Web Store "Summary" field (max 132 chars).
   description:
-    'Explain a selected term using the meaning of the whole document it appears in.',
+    'Select any term on a page; get it explained in your language, grounded in the page — with your own API key. BYOK, private.',
   minimum_chrome_version: '116',
   homepage_url: 'https://github.com/ZGhey/linglens',
   icons: {
