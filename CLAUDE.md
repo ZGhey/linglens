@@ -83,7 +83,7 @@ small Playwright e2e.
 ### Issue tracker
 
 Issues and specs live as local markdown under `.scratch/<feature-slug>/` (current
-feature: `context-lens`, issues in `.scratch/context-lens/issues/`). See
+feature: `linglens`, issues in `.scratch/linglens/issues/`). See
 `docs/agents/issue-tracker.md`.
 
 ### Triage labels

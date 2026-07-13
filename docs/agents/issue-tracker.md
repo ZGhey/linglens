@@ -4,7 +4,7 @@ Issues and specs (you may know a spec as a PRD) for this repo live as markdown f
 
 ## Conventions
 
-- One feature per directory: `.scratch/<feature-slug>/` (the current feature is `context-lens`)
+- One feature per directory: `.scratch/<feature-slug>/` (the current feature is `linglens`)
 - The spec lives at `.scratch/<feature-slug>/spec.md` — this repo's initial spec is `SPEC.md` at the root; new feature specs follow the per-directory convention
 - Implementation issues are one file per ticket at `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` — never a single combined tickets file
 - Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings)
