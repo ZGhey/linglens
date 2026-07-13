@@ -138,19 +138,65 @@ const STYLES = `
 export class Popup extends ShadowHost {
   private card: HTMLDivElement
   private streamBody: HTMLDivElement | null = null
+  /** The anchored term, in DOCUMENT coordinates. A viewport-only anchor detaches
+   * from the term as soon as the page scrolls, so the point is stored relative to
+   * the document and converted back on every placement. */
+  private anchor = { x: 0, y: 0 }
+  private resizeObserver: ResizeObserver
+  private readonly onViewportChange = (): void => this.reposition()
 
   constructor() {
     super(HOST_ID, STYLES)
     this.card = document.createElement('div')
     this.card.className = 'cl-card'
     this.root.appendChild(this.card)
+    // Re-place the card whenever it changes size. A streamed answer and each
+    // follow-up turn grow it, and a card anchored low in the viewport would
+    // otherwise grow straight off the bottom of the screen.
+    this.resizeObserver = new ResizeObserver(() => this.reposition())
+    this.resizeObserver.observe(this.card)
   }
 
-  /** Position the popup near a viewport point and attach it to the page. */
+  /** Anchor the popup to a term at a viewport point and attach it to the page. */
   showAt(x: number, y: number): void {
-    this.card.style.left = `${Math.min(x, window.innerWidth - 380)}px`
-    this.card.style.top = `${y + 8}px`
+    this.anchor = { x: x + window.scrollX, y: y + window.scrollY }
     this.mount()
+    this.reposition()
+    // The term moves under the card when the page scrolls or reflows; follow it.
+    window.addEventListener('scroll', this.onViewportChange, true)
+    window.addEventListener('resize', this.onViewportChange)
+  }
+
+  /** Place the card beside the anchored term and keep it fully on screen: below
+   * the term when there is room, flipped above it when there is not, clamped
+   * into the viewport either way. Runs on scroll (the term moves), on resize,
+   * and on every size change (the thread grows). */
+  private reposition(): void {
+    const GAP = 8
+    const ax = this.anchor.x - window.scrollX
+    const ay = this.anchor.y - window.scrollY
+    // Measured, not assumed: the card's width depends on its content.
+    const maxTop = window.innerHeight - GAP - this.card.offsetHeight
+    const maxLeft = window.innerWidth - GAP - this.card.offsetWidth
+
+    let top = ay + GAP
+    if (top > maxTop) {
+      // No room below — prefer flipping above the term, else pin to the bottom
+      // edge (a card taller than the space either way still stays readable; its
+      // own max-height keeps it scrollable rather than clipped).
+      const above = ay - GAP - this.card.offsetHeight
+      top = above >= GAP ? above : maxTop
+    }
+
+    this.card.style.top = `${Math.max(GAP, top)}px`
+    this.card.style.left = `${Math.max(GAP, Math.min(ax, maxLeft))}px`
+  }
+
+  override remove(): void {
+    this.resizeObserver.disconnect()
+    window.removeEventListener('scroll', this.onViewportChange, true)
+    window.removeEventListener('resize', this.onViewportChange)
+    super.remove()
   }
 
   renderLoading(term: string): void {
