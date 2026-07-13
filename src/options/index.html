@@ -78,7 +78,17 @@
 
     <label for="model">Model</label>
     <select id="model"></select>
-    <input id="modelCustom" autocomplete="off" placeholder="model id" hidden />
+    <input
+      id="modelCustom"
+      autocomplete="off"
+      placeholder="e.g. gemini-3.5-flash"
+      hidden
+      style="margin-top: 8px"
+    />
+    <p class="hint" id="modelCustomHint" hidden>
+      Paste an exact model id from your provider's docs. Vendor ids change often —
+      if a preset returns a 404, switch to Custom and enter the current id.
+    </p>
 
     <label for="apiKey">API key</label>
     <input id="apiKey" type="password" autocomplete="off" placeholder="sk-…" />

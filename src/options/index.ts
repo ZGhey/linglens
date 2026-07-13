@@ -1,7 +1,8 @@
 // Options / settings page. Loads settings, lets the user edit them, and persists
 // back to chrome.storage.local. Per-provider keys/models are kept so switching
-// provider preserves each one. The `custom` provider additionally exposes a
-// user-editable base URL and a free-text model.
+// provider preserves each one. Every provider's model is either a preset or a
+// free-text id (vendors rename ids often); the `custom` provider additionally
+// exposes a user-editable base URL.
 
 import { loadSettings, saveSettings, LANGUAGE_PRESETS, type Settings } from '@/settings'
 import { PROVIDERS, PROVIDER_MAP } from '@/providers'
@@ -17,6 +18,7 @@ const baseUrlLabelEl = $<HTMLLabelElement>('baseUrlLabel')
 const baseUrlHintEl = $<HTMLParagraphElement>('baseUrlHint')
 const modelEl = $<HTMLSelectElement>('model')
 const modelCustomEl = $<HTMLInputElement>('modelCustom')
+const modelCustomHintEl = $<HTMLParagraphElement>('modelCustomHint')
 const apiKeyEl = $<HTMLInputElement>('apiKey')
 const keyHintEl = $<HTMLParagraphElement>('keyHint')
 const langEl = $<HTMLSelectElement>('lang')
@@ -36,6 +38,9 @@ let refreshHistory: () => void = () => {}
 
 // Sentinel value for the "type your own language" option in the language select.
 const CUSTOM_LANG = '__custom__'
+// Sentinel for the "type your own model id" option in the model select. Vendors
+// rename/retire model ids often, so every provider allows a free-text id.
+const CUSTOM_MODEL = '__custom__'
 
 let settings: Settings
 
@@ -43,8 +48,9 @@ function currentProvider(): ProviderId {
   return providerEl.value as ProviderId
 }
 
-/** Populate the model dropdown for a provider and select the stored model. Falls
- * back to the first preset if the stored model is not a recognized option. */
+/** Populate the model dropdown (presets + a "Custom…" escape) and reflect the
+ * stored model: a preset selects itself, anything else (a pasted or delisted id)
+ * opens the free-text box under "Custom…" so nothing is silently lost. */
 function renderModelOptions(provider: ProviderId): void {
   modelEl.innerHTML = ''
   for (const m of PROVIDER_MAP[provider].models) {
@@ -53,18 +59,33 @@ function renderModelOptions(provider: ProviderId): void {
     opt.textContent = m
     modelEl.appendChild(opt)
   }
+  const customOpt = document.createElement('option')
+  customOpt.value = CUSTOM_MODEL
+  customOpt.textContent = 'Custom…'
+  modelEl.appendChild(customOpt)
+
   const stored = settings.models[provider]
-  modelEl.value = stored
-  if (modelEl.value !== stored) {
-    // Stored model is unknown (e.g. from an older build) — snap to a valid one.
-    modelEl.value = PROVIDER_MAP[provider].models[0] ?? ''
-    settings.models[provider] = modelEl.value
+  if (PROVIDER_MAP[provider].models.includes(stored)) {
+    modelEl.value = stored
+    modelCustomEl.value = ''
+  } else {
+    modelEl.value = CUSTOM_MODEL
+    modelCustomEl.value = stored
   }
+  syncModelCustomVisibility()
 }
 
-/** Show the fields for the selected provider from the in-memory settings. A
- * custom provider swaps the model dropdown for a free-text box and reveals the
- * base-URL row; built-in providers hide both. */
+/** Show the free-text model box + its hint only when "Custom…" is selected. */
+function syncModelCustomVisibility(): void {
+  const showCustom = modelEl.value === CUSTOM_MODEL
+  modelCustomEl.hidden = !showCustom
+  modelCustomHintEl.hidden = !showCustom
+}
+
+/** Show the fields for the selected provider from the in-memory settings. Only
+ * the `custom` (OpenAI-compatible) provider reveals the base-URL row and hides
+ * the preset dropdown (it has none); every provider shares the model dropdown +
+ * free-text escape. */
 function showProvider(provider: ProviderId): void {
   const descriptor = PROVIDER_MAP[provider]
   apiKeyEl.value = settings.apiKeys[provider]
@@ -74,25 +95,26 @@ function showProvider(provider: ProviderId): void {
   baseUrlLabelEl.hidden = !custom
   baseUrlEl.hidden = !custom
   baseUrlHintEl.hidden = !custom
-  modelEl.hidden = custom
-  modelCustomEl.hidden = !custom
+  if (custom) baseUrlEl.value = settings.customBaseUrl
 
-  if (custom) {
-    baseUrlEl.value = settings.customBaseUrl
-    modelCustomEl.value = settings.models[provider]
-  } else {
-    renderModelOptions(provider)
-  }
+  // A provider with no presets (custom) has nothing to pick, so hide the
+  // dropdown and let its free-text box stand alone.
+  modelEl.hidden = descriptor.models.length === 0
+  renderModelOptions(provider)
+}
+
+/** The model to persist: the free-text box when "Custom…" is chosen, else the
+ * selected preset. */
+function currentModel(): string {
+  return modelEl.value === CUSTOM_MODEL ? modelCustomEl.value.trim() : modelEl.value
 }
 
 /** Pull the visible fields for the active provider back into settings. */
 function captureProvider(provider: ProviderId): void {
   settings.apiKeys[provider] = apiKeyEl.value.trim()
+  settings.models[provider] = currentModel()
   if (PROVIDER_MAP[provider].custom) {
-    settings.models[provider] = modelCustomEl.value.trim()
     settings.customBaseUrl = baseUrlEl.value.trim()
-  } else {
-    settings.models[provider] = modelEl.value
   }
 }
 
@@ -158,6 +180,7 @@ async function init(): Promise<void> {
   })
 
   langEl.addEventListener('change', syncLangCustomVisibility)
+  modelEl.addEventListener('change', syncModelCustomVisibility)
 
   saveEl.addEventListener('click', () => void save())
 

@@ -14,19 +14,9 @@ describe('mergeSettings', () => {
     expect(merged.targetLang).toBe('English')
   })
 
-  it('snaps a delisted stored model to the provider default', () => {
-    const merged = mergeSettings({ models: { gemini: 'gemini-1.5-flash' } as never })
-    expect(merged.models.gemini).toBe('gemini-2.5-flash')
-  })
-
-  it('keeps a stored model that is still a current preset', () => {
-    const merged = mergeSettings({ models: { deepseek: 'deepseek-v4-pro' } as never })
-    expect(merged.models.deepseek).toBe('deepseek-v4-pro')
-  })
-
-  it('never snaps the free-text custom model', () => {
-    const merged = mergeSettings({ models: { custom: 'my-local-model' } as never })
-    expect(merged.models.custom).toBe('my-local-model')
+  it('keeps a stored model verbatim, including a non-preset id (free-text)', () => {
+    const merged = mergeSettings({ models: { gemini: 'gemini-3.1-pro-preview' } as never })
+    expect(merged.models.gemini).toBe('gemini-3.1-pro-preview')
   })
 })
 

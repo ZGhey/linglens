@@ -57,27 +57,15 @@ export const DEFAULT_SETTINGS: Settings = {
 
 const STORAGE_KEY = 'linglens.settings'
 
-/** Drop a stored model that is no longer one of the provider's presets (e.g. a
- * delisted id like gemini-1.5-flash) so it snaps to a current one. The `custom`
- * provider keeps a free-text model, so it is never snapped. */
-function snapModels(models: Record<ProviderId, string>): Record<ProviderId, string> {
-  const snapped = { ...models }
-  for (const descriptor of PROVIDERS) {
-    if (descriptor.custom) continue
-    const current = snapped[descriptor.id]
-    if (current && !descriptor.models.includes(current)) {
-      snapped[descriptor.id] = descriptor.models[0] ?? ''
-    }
-  }
-  return snapped
-}
-
 /** Merge stored settings over defaults so new fields always have a value. */
 export function mergeSettings(stored: Partial<Settings> | undefined): Settings {
   return {
     provider: stored?.provider ?? DEFAULT_SETTINGS.provider,
     apiKeys: { ...DEFAULT_SETTINGS.apiKeys, ...stored?.apiKeys },
-    models: snapModels({ ...DEFAULT_SETTINGS.models, ...stored?.models }),
+    // Model is free-text per provider, so a stored id is kept verbatim (even one
+    // that is not a current preset) — the settings UI shows it in an editable
+    // field rather than silently snapping it to a preset.
+    models: { ...DEFAULT_SETTINGS.models, ...stored?.models },
     targetLang: stored?.targetLang ?? DEFAULT_SETTINGS.targetLang,
     customBaseUrl: stored?.customBaseUrl ?? DEFAULT_SETTINGS.customBaseUrl,
     verbosity: stored?.verbosity ?? DEFAULT_SETTINGS.verbosity,

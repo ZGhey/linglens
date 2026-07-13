@@ -49,8 +49,10 @@ export const PROVIDERS: readonly ProviderDescriptor[] = [
     label: 'Google Gemini',
     wire: 'gemini',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
-    // 1.5 is delisted and 2.0 was shut down 2026-06-01; 2.5 is the current line.
-    models: ['gemini-2.5-flash', 'gemini-2.5-pro'],
+    // 1.5/2.0 are shut down (return 404) and 2.5 is gated off many keys; 3.5-flash
+    // is the current GA headline. Presets are only a convenience — the model field
+    // is free-text, so a user can always paste a newer id from Google's docs.
+    models: ['gemini-3.5-flash', 'gemini-3.1-flash-lite'],
   },
   {
     id: 'anthropic',
