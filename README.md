@@ -55,7 +55,7 @@ different on three axes:
 
 ### Chrome Web Store
 
-Submitted — pending review. Until it's live, load from source below.
+Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/linglens/fcababcnfnoibpmfcbghdkogfofkmejo).
 
 ### From source
 
