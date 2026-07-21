@@ -30,7 +30,7 @@ different on three axes:
 
 - **Your language.** Explanations come back in the language you configure
   (English, 中文, 日本語, and more) — not just English.
-- **Your key, your control.** BYOK: OpenAI, Anthropic, Google Gemini, DeepSeek,
+- **Your key, your control.** Bring your own API key — OpenAI, Anthropic, Google Gemini, DeepSeek,
   or any OpenAI-compatible endpoint — including a **local model** that never
   leaves your machine. Real provider-reported token counts are shown per
   explanation, so you always know exactly what each answer used.

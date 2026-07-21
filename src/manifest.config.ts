@@ -8,7 +8,7 @@ export default defineManifest({
   version: '0.1.1',
   // Kept in step with the Chrome Web Store "Summary" field (max 132 chars).
   description:
-    'Select any term on a page; get it explained in your language, grounded in the page — with your own API key. BYOK, private.',
+    'Select any term on a page; get it explained in your language, grounded in the page — with your own API key. Private.',
   minimum_chrome_version: '116',
   homepage_url: 'https://github.com/ZGhey/linglens',
   icons: {

@@ -13,7 +13,7 @@ Linglens — explain any term in your language
 **Summary** (short description, ≤132 chars)
 
 ```
-Select any term on a page; get it explained in your language, grounded in the page — with your own API key. BYOK, private.
+Select any term on a page; get it explained in your language, grounded in the page — with your own API key. Private.
 ```
 
 **Category**: `Productivity` (alternative: `Developer Tools`)
