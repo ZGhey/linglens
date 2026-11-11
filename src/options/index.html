@@ -82,6 +82,12 @@
           <div class="field">
             <label for="provider" data-i18n="provider"></label>
             <select id="provider"></select>
+            <!-- Provider-specific shortcut: get a free Gemini key, or connect
+                 OpenRouter without copying a key. -->
+            <div id="providerAssist" class="assist" hidden>
+              <p id="assistText"></p>
+              <button id="assistAction" type="button" class="btn secondary"></button>
+            </div>
           </div>
 
           <div class="field" id="baseUrlField">
@@ -101,6 +107,7 @@
             <label for="apiKey" data-i18n="apiKey"></label>
             <input id="apiKey" type="password" autocomplete="off" placeholder="sk-…" />
             <p class="hint" id="keyHint"></p>
+            <p class="hint" id="assistStatus" role="status" aria-live="polite"></p>
           </div>
 
           <p class="note" data-i18n="freeTierNote"></p>

@@ -181,3 +181,56 @@ test('Connect OpenRouter: approving on openrouter.ai saves the key without copyi
   // The callback tab is closed once the code is taken.
   await expect.poll(() => authTab.isClosed()).toBe(true)
 })
+
+test('configured: switching provider in Settings offers the guided way for that provider', async ({
+  context,
+  extensionId,
+}) => {
+  const [sw] = context.serviceWorkers()
+  await sw.evaluate(() => {
+    const g = globalThis as unknown as { __created?: string[] }
+    g.__created = []
+    chrome.tabs.create = (async (props: chrome.tabs.CreateProperties) => {
+      g.__created!.push(props.url ?? '')
+      return { id: 515151 } as chrome.tabs.Tab
+    }) as typeof chrome.tabs.create
+  })
+  await context.route('https://generativelanguage.googleapis.com/**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        models: [{ name: 'models/gemini-3.1-flash-lite', supportedGenerationMethods: ['generateContent'] }],
+      }),
+    }),
+  )
+
+  const page = await context.newPage()
+  await page.goto(`chrome-extension://${extensionId}/src/options/index.html`)
+  await page.evaluate(() =>
+    chrome.storage.local.set({
+      'linglens.settings': { provider: 'gemini', apiKeys: { gemini: 'AIzaOLD' }, models: { gemini: 'gemini-3.1-flash-lite' } },
+    }),
+  )
+  await page.reload()
+  await page.locator('#tab-btn-settings').click()
+
+  // OpenRouter: one-click connect right in the settings form.
+  await page.locator('#provider').selectOption('openrouter')
+  await expect(page.locator('#assistAction')).toHaveText('Connect OpenRouter')
+  await page.locator('#assistAction').click()
+  await expect(page.locator('#assistStatus')).toContainText('Waiting for you to approve')
+  await expect
+    .poll(() => sw.evaluate(() => (globalThis as unknown as { __created: string[] }).__created))
+    .toEqual([expect.stringContaining('https://openrouter.ai/auth?')])
+
+  // Gemini: a link to AI Studio, and a pasted key is checked and gets a model.
+  await page.locator('#provider').selectOption('gemini')
+  await expect(page.locator('#assistAction')).toHaveText('Open Google AI Studio')
+  await page.locator('#apiKey').fill('AIzaNEWKEY000000000000000000000000000000')
+  await expect(page.locator('#assistStatus')).toContainText('Key works (gemini-3.1-flash-lite)')
+
+  // Providers without a guided path show no assist.
+  await page.locator('#provider').selectOption('openai')
+  await expect(page.locator('#providerAssist')).toBeHidden()
+})
