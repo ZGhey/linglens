@@ -28,6 +28,13 @@ export default defineManifest({
       matches: ['<all_urls>'],
       js: ['src/content/index.ts'],
       run_at: 'document_idle',
+      // Also run inside iframes: webmail and document previewers render
+      // attachments (e.g. PDF text layers) in embedded frames, often
+      // cross-origin or about:blank/blob: ones.
+      all_frames: true,
+      match_about_blank: true,
+      // Chrome 119+; not in CRXJS's manifest typing yet.
+      ...({ match_origin_as_fallback: true } as object),
     },
   ],
   // Toolbar icon opens the settings UI as a popup; the same page is also kept as

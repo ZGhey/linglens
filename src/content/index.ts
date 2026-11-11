@@ -11,6 +11,10 @@ function isPdfView(): boolean {
   return document.contentType === 'application/pdf'
 }
 
+/** The script runs in every frame; PDF routing and notices are top-level only
+ *  (a PDF embedded in a frame keeps Chrome's viewer — see issue 15). */
+const isTopFrame = window === window.top
+
 const PDF_HINT_SEEN_KEY = 'linglens.pdfHintSeen'
 
 const PDF_VIEWER_NOTICE =
@@ -28,7 +32,7 @@ function isHistoryNavigation(): boolean {
 /** On a PDF, ask the worker to reopen it in the Linglens reader. Resolves false
  *  when the PDF stays in Chrome's viewer (reader off, bypassed, unloadable). */
 async function maybeOpenPdfReader(): Promise<boolean> {
-  if (!isPdfView() || isHistoryNavigation()) return false
+  if (!isTopFrame || !isPdfView() || isHistoryNavigation()) return false
   const msg: OpenPdfReaderRequest = { type: 'OPEN_PDF_READER', url: location.href }
   try {
     const res = (await chrome.runtime.sendMessage(msg)) as OpenPdfReaderResponse | undefined
@@ -41,7 +45,7 @@ async function maybeOpenPdfReader(): Promise<boolean> {
 /** First time a PDF stays in Chrome's viewer (reader off or bypassed), say once
  *  where select-to-explain lives; never nag again. */
 function maybeNotifyPdfOnce(): void {
-  if (!isPdfView()) return
+  if (!isTopFrame || !isPdfView()) return
   void chrome.storage.local.get(PDF_HINT_SEEN_KEY).then((stored) => {
     if (stored[PDF_HINT_SEEN_KEY]) return
     void chrome.storage.local.set({ [PDF_HINT_SEEN_KEY]: true })
@@ -56,7 +60,7 @@ startSelectionUi({
   // An explicit trigger with no reachable selection on a PDF: say why rather
   // than do nothing.
   onEmptyTrigger: () => {
-    if (isPdfView()) showPdfNotice(PDF_VIEWER_NOTICE)
+    if (isTopFrame && isPdfView()) showPdfNotice(PDF_VIEWER_NOTICE)
   },
 })
 
