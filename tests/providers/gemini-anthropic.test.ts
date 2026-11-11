@@ -113,3 +113,23 @@ describe('geminiGenerationConfig', () => {
     expect(geminiGenerationConfig('my-tuned-model')).toEqual({ temperature: 0.2 })
   })
 })
+
+describe('per-model request tuning', () => {
+  it('OpenAI reasoning models get no temperature and the lightest reasoning', async () => {
+    const { openaiTuning } = await import('@/providers/wire')
+    expect(openaiTuning('gpt-6-luna')).toEqual({ reasoning_effort: 'none' })
+    expect(openaiTuning('gpt-6.1-sol')).toEqual({ reasoning_effort: 'low' })
+    expect(openaiTuning('o4-mini')).toEqual({ reasoning_effort: 'low' })
+    expect(openaiTuning('gpt-4o-mini')).toEqual({ temperature: 0.2 })
+  })
+  it('DeepSeek turns thinking off; other OpenAI-compatible models keep temperature', async () => {
+    const { openaiTuning } = await import('@/providers/wire')
+    expect(openaiTuning('deepseek-flash')).toEqual({ thinking: { type: 'disabled' }, temperature: 0.2 })
+    expect(openaiTuning('openrouter/free')).toEqual({ temperature: 0.2 })
+  })
+  it('Claude 5-series uses low effort instead of temperature', async () => {
+    const { anthropicTuning } = await import('@/providers/wire')
+    expect(anthropicTuning('claude-haiku-5-5')).toEqual({ output_config: { effort: 'low' } })
+    expect(anthropicTuning('claude-sonnet-4-6')).toEqual({ temperature: 0.2 })
+  })
+})

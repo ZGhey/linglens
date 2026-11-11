@@ -34,16 +34,19 @@ export const PROVIDERS: readonly ProviderDescriptor[] = [
     label: 'OpenAI',
     wire: 'openai',
     baseUrl: 'https://api.openai.com/v1',
-    models: ['gpt-4o-mini', 'gpt-4o'],
+    // gpt-6-luna: OpenAI's efficient model for high-volume tasks; gpt-6.1-sol:
+    // near-flagship at lower cost. (gpt-4o / gpt-4o-mini shut down 2027-01-14.)
+    models: ['gpt-6-luna', 'gpt-6.1-sol'],
   },
   {
     id: 'deepseek',
     label: 'DeepSeek',
     wire: 'openai',
     baseUrl: 'https://api.deepseek.com',
-    // V4 lineup. The old deepseek-chat / deepseek-reasoner ids are deprecated
-    // 2026-07-24 (both map to v4-flash's non-thinking / thinking modes).
-    models: ['deepseek-v4-flash', 'deepseek-v4-pro'],
+    // deepseek-flash (V4.1 Flash) replaced deepseek-v4-flash, whose name is still
+    // accepted but served by the new model. deepseek-chat / -reasoner were
+    // discontinued 2026-07-24.
+    models: ['deepseek-flash', 'deepseek-v4-pro'],
   },
   {
     id: 'gemini',
@@ -61,7 +64,8 @@ export const PROVIDERS: readonly ProviderDescriptor[] = [
     label: 'Anthropic',
     wire: 'anthropic',
     baseUrl: 'https://api.anthropic.com',
-    models: ['claude-3-5-haiku-latest', 'claude-3-5-sonnet-latest'],
+    // Claude 3.5 Haiku / Sonnet are retired (requests fail).
+    models: ['claude-haiku-5-5', 'claude-sonnet-5-5'],
   },
   {
     id: 'openrouter',
@@ -87,6 +91,15 @@ export const PROVIDERS: readonly ProviderDescriptor[] = [
  *  of failing every explanation with a 404. */
 export const RETIRED_MODELS: Partial<Record<ProviderId, Record<string, string>>> = {
   gemini: { 'gemini-3.5-flash': 'gemini-3.1-flash-lite' },
+  anthropic: {
+    'claude-3-5-haiku-latest': 'claude-haiku-5-5',
+    'claude-3-5-sonnet-latest': 'claude-sonnet-5-5',
+  },
+  deepseek: {
+    'deepseek-v4-flash': 'deepseek-flash',
+    'deepseek-chat': 'deepseek-flash',
+    'deepseek-reasoner': 'deepseek-flash',
+  },
 }
 
 export const PROVIDER_MAP: Record<ProviderId, ProviderDescriptor> = Object.fromEntries(
