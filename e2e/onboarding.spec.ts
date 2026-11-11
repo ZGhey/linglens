@@ -34,7 +34,7 @@ test('first run: pasting a Gemini key connects it without generating text', asyn
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
-            models: [{ name: 'models/gemini-3.5-flash', supportedGenerationMethods: ['generateContent'] }],
+            models: [{ name: 'models/gemini-3.1-flash-lite', supportedGenerationMethods: ['generateContent'] }],
           }),
         })
       : route.fulfill({
@@ -60,19 +60,19 @@ test('first run: pasting a Gemini key connects it without generating text', asyn
   expect(studio.url()).toContain('aistudio.google.com/apikey')
   await studio.close()
 
-  const keyInput = page.getByPlaceholder(/Paste your Gemini key/)
+  const keyInput = page.locator('#geminiKey')
   await keyInput.fill('AIzaBADKEY')
   await expect(page.locator('#geminiStatus')).toContainText("doesn't look like a working Gemini key")
 
   await keyInput.fill('AIzaGOODKEY0000000000000000000000000000')
-  await expect(page.locator('#geminiStatus')).toContainText('Connected (gemini-3.5-flash)')
+  await expect(page.locator('#geminiStatus')).toContainText('Connected (gemini-3.1-flash-lite)')
   await expect(page.locator('#tab-settings')).toBeVisible()
 
   const stored = await page.evaluate(async () => (await chrome.storage.local.get('linglens.settings'))['linglens.settings'])
   expect(stored).toMatchObject({
     provider: 'gemini',
     apiKeys: { gemini: 'AIzaGOODKEY0000000000000000000000000000' },
-    models: { gemini: 'gemini-3.5-flash' },
+    models: { gemini: 'gemini-3.1-flash-lite' },
   })
   // Only the models list was called — never generateContent.
   expect(seen.length).toBeGreaterThan(0)
@@ -85,7 +85,7 @@ test('first run: "Enter it manually" reveals the normal settings form', async ({
 }) => {
   const page = await context.newPage()
   await page.goto(`chrome-extension://${extensionId}/src/options/index.html`)
-  await page.getByRole('button', { name: 'Enter it manually' }).click()
+  await page.getByRole('button', { name: 'Enter key' }).click()
   await expect(page.locator('#onboarding')).toBeHidden()
   await expect(page.locator('#provider')).toBeVisible()
 })
@@ -141,7 +141,7 @@ test('Connect OpenRouter: approving on openrouter.ai saves the key without copyi
 
   const page = await context.newPage()
   await page.goto(`chrome-extension://${extensionId}/src/options/index.html`)
-  await page.getByRole('button', { name: 'Connect OpenRouter' }).click()
+  await page.locator('#connectOpenRouter').click()
   await expect(page.locator('#openrouterStatus')).toContainText('Waiting for you to approve')
 
   const authUrl = await expect

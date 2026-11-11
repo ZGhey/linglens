@@ -4,125 +4,71 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Linglens — Settings</title>
-    <style>
-      body {
-        font: 14px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        color: #1a1a1a;
-        /* Sized as a toolbar popup; renders as a plain column when opened as a tab. */
-        width: 360px;
-        margin: 0;
-        padding: 16px;
-        box-sizing: border-box;
-      }
-      h1 { font-size: 20px; margin-bottom: 4px; }
-      .sub { color: #666; margin-top: 0; }
-      label { display: block; font-weight: 600; margin: 18px 0 6px; }
-      label.check { display: flex; align-items: center; gap: 8px; }
-      label.check input { width: auto; margin: 0; }
-      /* An explicit display on `label` would otherwise override the [hidden]
-         attribute's UA display:none, leaving hidden labels (e.g. Base URL for
-         non-custom providers) visible. */
-      label[hidden] { display: none; }
-      input, select {
-        width: 100%; padding: 8px 10px; font: inherit;
-        border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
-      }
-      .hint { color: #777; font-size: 12px; margin-top: 4px; }
-      #history details {
-        border: 1px solid #e2e2e2; border-radius: 6px;
-        padding: 6px 10px; margin-top: 6px;
-      }
-      #history summary { cursor: pointer; font-size: 13px; }
-      #history summary b { color: #0b5fff; }
-      #history summary .when { color: #999; font-size: 11px; }
-      #history p { margin: 8px 0 2px; font-size: 13px; white-space: pre-wrap; }
-      #history .empty { color: #999; font-size: 13px; }
-      .row { display: flex; gap: 12px; align-items: flex-end; margin-top: 24px; }
-      button {
-        font: inherit; font-weight: 600; cursor: pointer;
-        background: #0b5fff; color: #fff; border: none;
-        border-radius: 6px; padding: 9px 18px;
-      }
-      button:hover { background: #0a52db; }
-      #status { color: #15803d; font-size: 13px; }
-      .tabs { display: flex; gap: 4px; margin: 16px 0 4px; border-bottom: 1px solid #e2e2e2; }
-      .tab {
-        background: none; color: #555; font-weight: 600;
-        border: none; border-bottom: 2px solid transparent; border-radius: 0;
-        padding: 8px 12px;
-      }
-      .tab:hover { background: none; color: #1a1a1a; }
-      .tab[aria-selected='true'] { color: #0b5fff; border-bottom-color: #0b5fff; }
-      .tab-panel[hidden] { display: none; }
-      #onboarding[hidden], #setupCta[hidden], .tabs[hidden] { display: none; }
-      /* Opened as a tab (wider than the 360px popup): center the column. */
-      @media (min-width: 520px) { body { margin: 24px auto; } }
-      .card {
-        border: 1px solid #e2e2e2; border-radius: 8px;
-        padding: 12px 14px; margin-top: 12px;
-      }
-      .card.primary { border-color: #0b5fff; background: #f5f8ff; }
-      .card h2 { font-size: 15px; margin: 0 0 4px; }
-      .card p { margin: 4px 0; font-size: 13px; }
-      .card ol { margin: 8px 0 0; padding-left: 20px; font-size: 13px; }
-      .card ol li { margin: 6px 0; }
-      .card input { margin-top: 6px; }
-      button.secondary { background: #f7f7f7; color: #333; border: 1px solid #ccc; }
-      button.secondary:hover { background: #eee; }
-      .ok { color: #15803d; }
-      .err { color: #b91c1c; }
-    </style>
+    <link rel="stylesheet" href="./options.css" />
   </head>
   <body>
-    <h1>Linglens</h1>
-    <p class="sub">Your key is stored locally and sent only to the provider you choose.</p>
+    <header class="masthead">
+      <img src="../icons/icon-48.png" alt="" />
+      <div>
+        <h1>Linglens</h1>
+        <p class="tagline">Explain any term, in context</p>
+      </div>
+      <span id="connection" class="connection" role="status"></span>
+    </header>
 
     <!-- Toolbar popup, not set up yet: setup runs in a tab, because the popup
          closes as soon as focus moves to Google's sign-in page. -->
-    <div id="setupCta" class="card primary" hidden>
-      <h2>Set up Linglens</h2>
-      <p>Get a free key with your Google account in about 30 seconds.</p>
-      <div class="row" style="margin-top: 8px">
-        <button id="openSetup" type="button">Set up</button>
-      </div>
+    <div id="setupCta" class="card featured" hidden>
+      <h2>Connect a model to start</h2>
+      <p class="lede">A free Gemini key or your OpenRouter account — about 30 seconds.</p>
+      <button id="openSetup" type="button" class="btn block cta">Set up Linglens</button>
     </div>
 
     <section id="onboarding" hidden aria-labelledby="onboardingTitle">
-      <div class="card primary">
-        <h2 id="onboardingTitle">Free Gemini key (recommended)</h2>
-        <p>Sign in with your Google account and create a free key. No credit card.</p>
-        <ol>
+      <div class="setup-intro">
+        <h2 id="onboardingTitle">Connect a model</h2>
+        <p>Linglens writes explanations with an AI model you choose. Your key stays in this browser.</p>
+      </div>
+
+      <div class="card featured">
+        <h2>Free Gemini key <span class="badge">Recommended</span></h2>
+        <p class="lede">Use your Google account. No credit card.</p>
+        <ol class="steps">
           <li>
-            <button id="openAiStudio" type="button">Open Google AI Studio</button>
+            <button id="openAiStudio" type="button" class="btn">Open Google AI Studio</button>
           </li>
-          <li>Click <b>Create API key</b>, then copy the key.</li>
+          <li>Click <b>Create API key</b>, then copy it.</li>
           <li>
-            Paste it here:
-            <input id="geminiKey" type="password" autocomplete="off" placeholder="Paste your Gemini key (AIza…)" />
+            Paste it here — it's checked automatically.
+            <input id="geminiKey" type="password" autocomplete="off" placeholder="AIza…" aria-label="Gemini API key" />
           </li>
         </ol>
         <p id="geminiStatus" class="hint" role="status" aria-live="polite"></p>
-        <p class="hint">
-          When you explain something, the selected text and a short summary of the page are
-          sent to Google. Google's free tier may use them to improve its products.
+        <p class="note">
+          When you explain something, the selected text and a short summary of the page go to
+          Google. Google's free tier may use them to improve its products.
         </p>
       </div>
-      <div class="card">
-        <h2>Connect OpenRouter</h2>
-        <p>
-          Sign in to OpenRouter (Google, GitHub or email) and approve — no key to copy.
-          Includes free models (a limited number of requests per day); add credits for more.
-        </p>
-        <div class="row" style="margin-top: 8px">
-          <button id="connectOpenRouter" type="button" class="secondary">Connect OpenRouter</button>
+
+      <div class="option-list">
+        <div class="option">
+          <div class="option-head">
+            <div>
+              <h3>OpenRouter</h3>
+              <p>Sign in and approve — no key to copy. Free models included (daily limit).</p>
+            </div>
+            <button id="connectOpenRouter" type="button" class="btn secondary">Connect</button>
+          </div>
+          <p id="openrouterStatus" class="hint" role="status" aria-live="polite"></p>
         </div>
-        <p id="openrouterStatus" class="hint" role="status" aria-live="polite"></p>
-      </div>
-      <div class="card">
-        <h2>I already have an API key</h2>
-        <p>OpenAI, Anthropic, DeepSeek, Gemini, or any OpenAI-compatible endpoint.</p>
-        <div class="row" style="margin-top: 8px">
-          <button id="showManual" type="button" class="secondary">Enter it manually</button>
+        <div class="option">
+          <div class="option-head">
+            <div>
+              <h3>I have an API key</h3>
+              <p>OpenAI, Anthropic, DeepSeek, Gemini, or any OpenAI-compatible endpoint.</p>
+            </div>
+            <button id="showManual" type="button" class="btn secondary">Enter key</button>
+          </div>
         </div>
       </div>
     </section>
@@ -133,94 +79,95 @@
     </div>
 
     <div id="tab-settings" class="tab-panel" role="tabpanel">
-    <label for="provider">Provider</label>
-    <select id="provider"></select>
+      <section class="group">
+        <h2 class="group-title">Model</h2>
+        <div class="card">
+          <div class="field">
+            <label for="provider">Provider</label>
+            <select id="provider"></select>
+          </div>
 
-    <label for="baseUrl" id="baseUrlLabel" hidden>Base URL</label>
-    <input
-      id="baseUrl"
-      autocomplete="off"
-      placeholder="https://host/v1"
-      hidden
-    />
-    <p class="hint" id="baseUrlHint" hidden>OpenAI-compatible endpoint. The path /chat/completions is appended.</p>
+          <div class="field" id="baseUrlField">
+            <label for="baseUrl" id="baseUrlLabel" hidden>Base URL</label>
+            <input id="baseUrl" autocomplete="off" placeholder="https://host/v1" hidden />
+            <p class="hint" id="baseUrlHint" hidden>OpenAI-compatible endpoint. /chat/completions is appended.</p>
+          </div>
 
-    <label for="model">Model</label>
-    <select id="model"></select>
-    <input
-      id="modelCustom"
-      autocomplete="off"
-      placeholder="e.g. gemini-3.5-flash"
-      hidden
-      style="margin-top: 8px"
-    />
-    <p class="hint" id="modelCustomHint" hidden>
-      Paste an exact model id from your provider's docs. Vendor ids change often —
-      if a preset returns a 404, switch to Custom and enter the current id.
-    </p>
+          <div class="field">
+            <label for="model">Model</label>
+            <select id="model"></select>
+            <input id="modelCustom" autocomplete="off" placeholder="e.g. gemini-3.1-flash-lite" hidden />
+            <p class="hint" id="modelCustomHint" hidden>
+              Paste an exact model id from your provider's docs. If a preset returns a 404,
+              pick Custom and enter the current id.
+            </p>
+          </div>
 
-    <label for="apiKey">API key</label>
-    <input id="apiKey" type="password" autocomplete="off" placeholder="sk-…" />
-    <p class="hint" id="keyHint"></p>
-    <p class="hint">
-      Heads up: a provider's <b>free tier</b> may use your prompts to improve their
-      products (Google Gemini's free tier does; its paid tier doesn't). Use a paid
-      key or a local model if that matters.
-    </p>
+          <div class="field">
+            <label for="apiKey">API key</label>
+            <input id="apiKey" type="password" autocomplete="off" placeholder="sk-…" />
+            <p class="hint" id="keyHint"></p>
+          </div>
 
-    <label for="lang">Explanation language</label>
-    <select id="lang"></select>
-    <input
-      id="langCustom"
-      autocomplete="off"
-      placeholder="e.g. Italiano, 日本語"
-      hidden
-      style="margin-top: 8px"
-    />
+          <p class="note">
+            A provider's free tier may use your prompts to improve its products (Gemini's free
+            tier does; its paid tier doesn't). Use a paid key or a local model if that matters.
+          </p>
+        </div>
+      </section>
 
-    <label for="verbosity">Explanation length</label>
-    <select id="verbosity">
-      <option value="concise">Concise — 1-2 sentences</option>
-      <option value="detailed">Detailed — 4-6 sentences with an example</option>
-    </select>
+      <section class="group">
+        <h2 class="group-title">Explanations</h2>
+        <div class="card">
+          <div class="field">
+            <label for="lang">Language</label>
+            <select id="lang"></select>
+            <input id="langCustom" autocomplete="off" placeholder="e.g. Italiano, 日本語" hidden aria-label="Custom language" />
+          </div>
+          <div class="field">
+            <label for="verbosity">Length</label>
+            <select id="verbosity">
+              <option value="concise">Concise — 1–2 sentences</option>
+              <option value="detailed">Detailed — 4–6 sentences with an example</option>
+            </select>
+          </div>
+        </div>
+      </section>
 
-    <label class="check" for="pdfReader">
-      <input id="pdfReader" type="checkbox" />
-      Open PDFs in the Linglens reader
-    </label>
-    <p class="hint">
-      Select text in any PDF to explain it, like on web pages. Turn off to keep
-      Chrome's own PDF viewer. Local files also need "Allow access to file URLs"
-      on Linglens's details page in chrome://extensions.
-    </p>
+      <section class="group">
+        <h2 class="group-title">PDFs</h2>
+        <div class="card">
+          <label class="switch-row" for="pdfReader">
+            <span>Open PDFs in the Linglens reader</span>
+            <input id="pdfReader" type="checkbox" role="switch" />
+          </label>
+          <p class="hint">
+            Select text in any PDF to explain it, like on web pages. Turn off to keep Chrome's
+            viewer. Local files also need “Allow access to file URLs” in chrome://extensions.
+          </p>
+        </div>
+      </section>
 
-    <div class="row">
-      <button id="save" type="button">Save</button>
-      <span id="status"></span>
-    </div>
+      <div class="savebar">
+        <button id="save" type="button" class="btn">Save changes</button>
+        <span id="status" role="status" aria-live="polite"></span>
+      </div>
     </div>
 
     <div id="tab-history" class="tab-panel" role="tabpanel" hidden>
-    <label for="historyLimit" style="margin-top: 16px">Keep last N entries</label>
-    <input id="historyLimit" type="number" min="1" max="1000" step="1" style="width: 120px" />
-    <p class="hint">Oldest entries are dropped past this. Saved with the Settings tab (1–1000).</p>
-
-    <p class="hint" style="margin-top: 16px">
-      Terms you explained. Expanding an entry re-reads it from local storage — no API call.
-    </p>
-    <div id="history"></div>
-    <button
-      id="clearHistory"
-      type="button"
-      style="background: #f7f7f7; color: #333; border: 1px solid #ccc; margin-top: 8px"
-      hidden
-    >
-      Clear history
-    </button>
+      <div class="history-head">
+        <div class="field">
+          <label for="historyLimit">Keep last</label>
+          <input id="historyLimit" type="number" min="1" max="1000" step="1" />
+        </div>
+        <p class="hint">entries (1–1000). Saved with Settings. Re-reading an entry makes no API call.</p>
+      </div>
+      <div id="history"></div>
+      <button id="clearHistory" type="button" class="btn ghost" hidden>Clear history</button>
     </div>
 
-    <p class="hint" style="margin-top: 28px; border-top: 1px solid #eaeef2; padding-top: 12px">
-      Linglens is open source ·
+    <p class="colophon">
+      Open source ·
       <a href="https://github.com/ZGhey/linglens" target="_blank" rel="noreferrer">GitHub</a>
       ·
       <a href="https://github.com/ZGhey/linglens/blob/main/PRIVACY.md" target="_blank" rel="noreferrer">Privacy</a>
