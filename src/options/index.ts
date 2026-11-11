@@ -19,6 +19,8 @@ const providerEl = $<HTMLSelectElement>('provider')
 const baseUrlEl = $<HTMLInputElement>('baseUrl')
 const baseUrlLabelEl = $<HTMLLabelElement>('baseUrlLabel')
 const baseUrlHintEl = $<HTMLParagraphElement>('baseUrlHint')
+const baseUrlFieldEl = $<HTMLDivElement>('baseUrlField')
+const connectionEl = $<HTMLSpanElement>('connection')
 const modelEl = $<HTMLSelectElement>('model')
 const modelCustomEl = $<HTMLInputElement>('modelCustom')
 const modelCustomHintEl = $<HTMLParagraphElement>('modelCustomHint')
@@ -45,7 +47,7 @@ const openAiStudioEl = $<HTMLButtonElement>('openAiStudio')
 const geminiKeyEl = $<HTMLInputElement>('geminiKey')
 const geminiStatusEl = $<HTMLParagraphElement>('geminiStatus')
 const showManualEl = $<HTMLButtonElement>('showManual')
-const manualCardEl = showManualEl.closest<HTMLElement>('.card')!
+const manualCardEl = showManualEl.closest<HTMLElement>('.option')!
 const connectOpenRouterEl = $<HTMLButtonElement>('connectOpenRouter')
 const openrouterStatusEl = $<HTMLParagraphElement>('openrouterStatus')
 
@@ -110,6 +112,7 @@ function showProvider(provider: ProviderId): void {
   baseUrlLabelEl.hidden = !custom
   baseUrlEl.hidden = !custom
   baseUrlHintEl.hidden = !custom
+  baseUrlFieldEl.hidden = !custom
   if (custom) baseUrlEl.value = settings.customBaseUrl
 
   // A provider with no presets (custom) has nothing to pick, so hide the
@@ -240,7 +243,24 @@ function setMainVisible(visible: boolean): void {
 
 /** First run: in a tab, lead with the guided free key; in the toolbar popup,
  *  offer to open that tab (the popup closes when focus moves to Google). */
+/** Header badge: which provider + model is active, or that none is set up. */
+function renderConnection(): void {
+  const cfg = activeConfig(settings)
+  if (cfg.apiKey.trim()) {
+    // Provider in the badge; the model is in its tooltip (the popup is narrow).
+    const label = PROVIDER_MAP[cfg.provider].label
+    connectionEl.textContent = label
+    connectionEl.title = cfg.model ? `${label} · ${cfg.model}` : label
+    connectionEl.dataset.state = 'on'
+  } else {
+    connectionEl.textContent = 'Not set up'
+    connectionEl.title = ''
+    connectionEl.dataset.state = 'off'
+  }
+}
+
 function renderSetupState(): void {
+  renderConnection()
   if (isConfigured(settings)) {
     setupCtaEl.hidden = true
     onboardingEl.hidden = true
@@ -324,6 +344,7 @@ function wireOnboarding(): void {
     setOpenRouterStatus('Connected. Select a word on any web page or PDF and click the Linglens icon.', 'ok')
     manualCardEl.hidden = true
     setMainVisible(true)
+    renderConnection()
     const info = await fetchKeyInfo(settings.apiKeys.openrouter)
     if (info?.isFreeTier && info.freeRequestsRemaining !== null) {
       setOpenRouterStatus(
@@ -354,6 +375,7 @@ function wireOnboarding(): void {
     )
     manualCardEl.hidden = true
     setMainVisible(true)
+    renderConnection()
   }
 }
 
@@ -378,6 +400,7 @@ async function save(): Promise<void> {
   // Apply a lowered cap immediately, then re-render the (possibly shorter) list.
   await trimHistory(settings.historyLimit)
   refreshHistory()
+  renderConnection()
   statusEl.textContent = 'Saved'
   setTimeout(() => (statusEl.textContent = ''), 1500)
 }
