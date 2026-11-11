@@ -20,7 +20,7 @@ Select any term on a page; get it explained in your language, grounded in the pa
 
 **Language**: English
 
-**Screenshots**: upload `docs/store/01-trigger.png` … `05-settings.png` (1280×800).
+**Screenshots** (1280×800, no alpha; regenerate with `npm run demo:record`): English listing `docs/store/en-1.png` … `en-5.png`; Chinese (zh-CN) listing `docs/store/zh-1.png` … `zh-4.png`.
 
 **Detailed description**
 

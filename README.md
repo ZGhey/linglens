@@ -4,9 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contributing)
 
-**Select a term on any web page and get it explained — in your language, grounded in the page you're reading, using your own API key.**
+**Select a term on any web page or PDF and get it explained — in your language, grounded in the document you're reading, using your own API key.**
 
-![Linglens demo — select a term, click the icon, get a grounded explanation, ask a follow-up, and read it in your language](docs/demo.gif)
+![Linglens demo — select "hydration" in a React article, click the icon, and the explanation streams in, in Chinese, grounded in the article](docs/demo-web.gif)
 
 Linglens is a Chrome (Manifest V3) extension for reading technical documentation
 in a language that isn't your first. You know the words; what you don't know is
@@ -37,7 +37,16 @@ different on three axes:
 - **A conversation, not a one-shot.** Ask a follow-up right in the popup —
   "give an example", "how is this different from X?" — and keep the thread.
 
-![The same term, explained in your language](docs/store/04-language.png)
+**Works in PDFs.** PDFs open in a built-in reader; the explanation is grounded in
+the section you selected from — here "dropout" in *Regularization*, not the
+data-cleaning "dropout" a paragraph above.
+
+![Linglens in a PDF — selecting "dropout" in the Regularization section explains the regularization technique](docs/demo-pdf.gif)
+
+**Set up in seconds.** Paste a free Gemini key (or connect OpenRouter, or bring
+any provider's key) and it's checked automatically.
+
+![Linglens setup — paste a free Gemini key and it connects](docs/demo-setup.gif)
 
 ## Features
 

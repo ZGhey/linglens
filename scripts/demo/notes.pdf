@@ -1,0 +1,49 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 1825 >>
+stream
+BT /F2 22 Tf 72 720 Td (Training ) Tj (Robust ) Tj (Neural ) Tj (Networks) Tj ET
+BT /F1 11 Tf 72 694 Td (A. ) Tj (Researcher, ) Tj (B. ) Tj (Student ) Tj (- ) Tj (Lab ) Tj (Notes, ) Tj (2026) Tj ET
+BT /F2 15 Tf 72 650 Td (1 ) Tj (Data ) Tj (preparation) Tj ET
+BT /F1 11 Tf 72 628 Td (Before ) Tj (training ) Tj (we ) Tj (clean ) Tj (the ) Tj (dataset. ) Tj (Early ) Tj (dropout ) Tj (of ) Tj (weak ) Tj (features ) Tj (is ) Tj (a) Tj ET
+BT /F1 11 Tf 72 613 Td (data-cleaning ) Tj (step: ) Tj (inputs ) Tj (that ) Tj (carry ) Tj (little ) Tj (signal ) Tj (are ) Tj (removed ) Tj (so ) Tj (the ) Tj (model) Tj ET
+BT /F1 11 Tf 72 598 Td (never ) Tj (sees ) Tj (them. ) Tj (This ) Tj (keeps ) Tj (the ) Tj (input ) Tj (space ) Tj (small ) Tj (and ) Tj (the ) Tj (training ) Tj (fast.) Tj ET
+BT /F2 15 Tf 72 560 Td (2 ) Tj (Regularization) Tj ET
+BT /F1 11 Tf 72 538 Td (Large ) Tj (networks ) Tj (memorize ) Tj (their ) Tj (training ) Tj (data. ) Tj (Here ) Tj (dropout ) Tj (randomly ) Tj (disables) Tj ET
+BT /F1 11 Tf 72 523 Td (units ) Tj (during ) Tj (training, ) Tj (which ) Tj (forces ) Tj (the ) Tj (network ) Tj (to ) Tj (learn ) Tj (redundant ) Tj (features) Tj ET
+BT /F1 11 Tf 72 508 Td (instead ) Tj (of ) Tj (relying ) Tj (on ) Tj (any ) Tj (single ) Tj (unit. ) Tj (We ) Tj (use ) Tj (a ) Tj (rate ) Tj (of ) Tj (0.5 ) Tj (in ) Tj (hidden ) Tj (layers) Tj ET
+BT /F1 11 Tf 72 493 Td (and ) Tj (turn ) Tj (it ) Tj (off ) Tj (at ) Tj (evaluation ) Tj (time.) Tj ET
+BT /F2 15 Tf 72 455 Td (3 ) Tj (Results) Tj ET
+BT /F1 11 Tf 72 433 Td (With ) Tj (both ) Tj (steps ) Tj (the ) Tj (validation ) Tj (error ) Tj (drops ) Tj (by ) Tj (a ) Tj (clear ) Tj (margin ) Tj (while ) Tj (training) Tj ET
+BT /F1 11 Tf 72 418 Td (time ) Tj (stays ) Tj (roughly ) Tj (the ) Tj (same ) Tj (as ) Tj (the ) Tj (baseline ) Tj (model.) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000002128 00000 n 
+0000002198 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2273
+%%EOF
