@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Frame host</title>
+  </head>
+  <body>
+    <h1>Mail client</h1>
+    <p>An attachment previewer renders the document in a cross-origin frame below.</p>
+    <!-- 127.0.0.1 vs localhost: a different origin, like a webmail previewer. -->
+    <iframe id="preview" src="http://127.0.0.1:5199/fixture.html" width="900" height="600"></iframe>
+  </body>
+</html>
