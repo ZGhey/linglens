@@ -24,6 +24,7 @@ const keyHintEl = $<HTMLParagraphElement>('keyHint')
 const langEl = $<HTMLSelectElement>('lang')
 const langCustomEl = $<HTMLInputElement>('langCustom')
 const verbosityEl = $<HTMLSelectElement>('verbosity')
+const pdfReaderEl = $<HTMLInputElement>('pdfReader')
 const saveEl = $<HTMLButtonElement>('save')
 const statusEl = $<HTMLSpanElement>('status')
 const historyEl = $<HTMLDivElement>('history')
@@ -170,6 +171,7 @@ async function init(): Promise<void> {
   showProvider(settings.provider)
   renderLanguageOptions()
   verbosityEl.value = settings.verbosity
+  pdfReaderEl.checked = settings.pdfReader
 
   providerEl.addEventListener('change', () => {
     // Capture edits to the provider we're leaving (settings.provider still holds
@@ -209,6 +211,7 @@ async function save(): Promise<void> {
   settings.provider = currentProvider()
   settings.targetLang = currentLanguage()
   settings.verbosity = verbosityEl.value as Settings['verbosity']
+  settings.pdfReader = pdfReaderEl.checked
   settings.historyLimit = clampHistoryLimit(parseInt(historyLimitEl.value, 10))
   historyLimitEl.value = String(settings.historyLimit)
   await saveSettings(settings)

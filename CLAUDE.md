@@ -63,6 +63,18 @@ Four processes, split so API keys never enter page context:
   per-provider files (`openai.ts` etc.) are thin descriptor-bound re-exports kept
   as unit-test seams. Errors are typed `ProviderError` (`ErrorKind`) and never
   swallowed.
+- **PDF reader** (`src/reader/`, `src/pdf/`) — an extension page (pdf.js
+  legacy build, runtime assets copied to `dist/pdfjs/` by `vite.config.ts`).
+  The content script detects Chrome's native PDF view and asks the worker to
+  `tabs.update` the tab to the reader (skipped when the `pdfReader` setting is
+  off, the URL was bypassed this session, or on back/forward navigation). The
+  reader drives the same `startSelectionUi` (`src/content/selection-ui.ts`) as
+  web pages via a `DocumentSource`: its "HTML" is the PDF text rebuilt by the
+  pure `src/pdf/structure.ts` (paragraphs, outline/heuristic headings, capped),
+  and its context hint is the exact paragraph under the selection. A failed
+  load auto-falls back to Chrome's viewer (`PDF_BYPASS`). Triggers reach the
+  reader as a runtime broadcast carrying its `tabId` (tabs.sendMessage doesn't
+  reach extension pages).
 - **Settings** (`src/settings/`) — `chrome.storage.local`. Labels/models are
   derived from the provider registry (one source of truth). `usage.ts` holds the
   token-usage helper (`addUsage`); usage counts shown in the UI are always

@@ -22,9 +22,11 @@ export interface DocumentSource {
   url(): string
   /** Document HTML handed to the pipeline. May resolve later (PDF text extraction). */
   html(): string | Promise<string>
-  /** Text of the block the current selection sits in, read from the live
-   *  selection. Disambiguates which section a repeated term belongs to. */
-  contextHint(): string
+  /** Text of the block the current selection sits in. Must read the live
+   *  selection synchronously (it may be gone later) but may resolve later — the
+   *  PDF reader finishes text extraction in the background. Disambiguates which
+   *  section a repeated term belongs to. */
+  contextHint(): string | Promise<string>
   /** An explicit trigger (context menu / shortcut) found no selection. */
   onEmptyTrigger?(): void
   /** Set on extension pages, which receive triggers by broadcast: only a
@@ -130,7 +132,7 @@ export function startSelectionUi(source: DocumentSource): void {
     term: string,
     anchor: Anchor,
     verbosity?: Verbosity,
-    contextHint?: string,
+    contextHint?: string | Promise<string>,
     targetLang?: string,
   ): void {
     // Replacing an existing popup abandons its stream — disconnect so the worker
@@ -163,7 +165,7 @@ export function startSelectionUi(source: DocumentSource): void {
             const session: PopupSession = {
               term,
               anchor,
-              hint,
+              hint: request.contextHint,
               verbosity: res.verbosity,
               targetLang: res.targetLang,
               explanation: res.explanation,
@@ -187,7 +189,7 @@ export function startSelectionUi(source: DocumentSource): void {
 
   async function buildRequest(
     term: string,
-    contextHint: string,
+    contextHint: string | Promise<string>,
     verbosity: Verbosity | undefined,
     targetLang: string | undefined,
     followUp?: ExplainRequest['followUp'],
@@ -197,7 +199,7 @@ export function startSelectionUi(source: DocumentSource): void {
       term,
       url: source.url(),
       html: await source.html(),
-      contextHint,
+      contextHint: await contextHint,
       verbosity,
       targetLang,
       followUp,

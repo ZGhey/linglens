@@ -41,6 +41,10 @@ export default defineManifest({
     },
   },
   options_page: 'src/options/index.html',
+  // pdf.js (PDF reader page) decodes some image formats with bundled wasm.
+  content_security_policy: {
+    extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+  },
   commands: {
     'explain-selection': {
       suggested_key: {

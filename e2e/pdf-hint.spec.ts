@@ -18,7 +18,16 @@ const test = base.extend<{ context: BrowserContext }>({
   },
 })
 
-test('shows a one-time PDF-not-supported notice, then never again', async ({ context }) => {
+test('with the reader off, shows a one-time PDF-viewer notice, then never again', async ({
+  context,
+}) => {
+  // Turn the Linglens PDF reader off so PDFs stay in Chrome's viewer.
+  let [sw] = context.serviceWorkers()
+  if (!sw) sw = await context.waitForEvent('serviceworker')
+  await sw.evaluate(() =>
+    chrome.storage.local.set({ 'linglens.settings': { pdfReader: false } }),
+  )
+
   // Serve a PDF with the correct content-type so Chrome uses its built-in viewer.
   await context.route('https://example.test/doc.pdf', (route) =>
     route.fulfill({ status: 200, headers: { 'content-type': 'application/pdf' }, body: pdfBytes }),

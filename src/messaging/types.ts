@@ -77,6 +77,32 @@ export interface OpenOptionsRequest {
  *  the context-menu entry and the keyboard command. */
 export interface TriggerSelectionRequest {
   type: 'TRIGGER_SELECTION'
+  /** Set on the runtime broadcast that reaches extension pages (the PDF
+   *  reader), which only act on a trigger addressed to their own tab. */
+  tabId?: number
 }
 
-export type Message = ExplainRequest | OpenOptionsRequest | TriggerSelectionRequest
+/** Content -> worker: this tab shows a PDF in Chrome's viewer; open it in the
+ *  Linglens reader if the setting allows and the URL isn't bypassed. */
+export interface OpenPdfReaderRequest {
+  type: 'OPEN_PDF_READER'
+  url: string
+}
+
+export interface OpenPdfReaderResponse {
+  redirected: boolean
+}
+
+/** Reader -> worker: show this PDF in Chrome's own viewer from now on (this
+ *  browser session) — the user asked for it, or the reader couldn't load it. */
+export interface PdfBypassRequest {
+  type: 'PDF_BYPASS'
+  url: string
+}
+
+export type Message =
+  | ExplainRequest
+  | OpenOptionsRequest
+  | TriggerSelectionRequest
+  | OpenPdfReaderRequest
+  | PdfBypassRequest

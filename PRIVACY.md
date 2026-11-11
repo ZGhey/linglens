@@ -35,9 +35,9 @@ from your browser to your chosen provider's API** (or to the custom base URL
 you entered):
 
 - The selected term.
-- A bounded summary of the page you are reading (title, heading outline, a
-  short topic summary, and the section your selection sits in) — assembled
-  locally from the page's content. Code blocks are excluded.
+- A bounded summary of the page or PDF you are reading (title, heading
+  outline, a short topic summary, and the section your selection sits in) —
+  assembled locally from the document's content. Code blocks are excluded.
 - For a follow-up question: the prior explanation and your follow-up turns.
 - Your target language and length preference.
 
@@ -60,8 +60,19 @@ provider's terms, use a paid key, or run a local model if that matters to you.
 - No analytics, telemetry, tracking, or crash reporting.
 - No selling or sharing of data with third parties (there is no data leaving
   your machine except the request you send to your own provider).
-- No reading or transmitting page content unless you trigger an explanation on
-  a selection.
+- No transmitting page content unless you trigger an explanation on a
+  selection.
+
+## The PDF reader
+
+When the "Open PDFs in the Linglens reader" setting is on (the default), a PDF
+you open is shown in Linglens's built-in reader instead of Chrome's viewer. The
+reader downloads the PDF again from the same address (with your browser's
+cookies, so PDFs behind a login keep working) and renders and indexes its text
+**locally in your browser**, so that selecting text works and an explanation
+can be grounded in the document. Nothing from the PDF leaves your machine
+unless you trigger an explanation — and then only the bounded summary described
+above. Turn the setting off to keep Chrome's own PDF viewer.
 
 ## Permissions, and why
 
@@ -69,8 +80,10 @@ provider's terms, use a paid key, or run a local model if that matters to you.
 - `contextMenus` — to add the right-click "Explain with Linglens" entry.
 - `host_permissions: <all_urls>` — so you can select and explain terms on any
   page, and so the extension can send your request to whatever provider or
-  custom base URL you configure. Page content is only read at the moment you
-  trigger an explanation.
+  custom base URL you configure, and so the PDF reader can load the PDFs you
+  open. Web-page content is only read at the moment you trigger an
+  explanation; PDFs shown in the reader are processed locally as described
+  above.
 
 ## Contact
 

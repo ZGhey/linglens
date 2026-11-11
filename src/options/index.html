@@ -17,6 +17,8 @@
       h1 { font-size: 20px; margin-bottom: 4px; }
       .sub { color: #666; margin-top: 0; }
       label { display: block; font-weight: 600; margin: 18px 0 6px; }
+      label.check { display: flex; align-items: center; gap: 8px; }
+      label.check input { width: auto; margin: 0; }
       /* An explicit display on `label` would otherwise override the [hidden]
          attribute's UA display:none, leaving hidden labels (e.g. Base URL for
          non-custom providers) visible. */
@@ -114,6 +116,16 @@
       <option value="concise">Concise — 1-2 sentences</option>
       <option value="detailed">Detailed — 4-6 sentences with an example</option>
     </select>
+
+    <label class="check" for="pdfReader">
+      <input id="pdfReader" type="checkbox" />
+      Open PDFs in the Linglens reader
+    </label>
+    <p class="hint">
+      Select text in any PDF to explain it, like on web pages. Turn off to keep
+      Chrome's own PDF viewer. Local files also need "Allow access to file URLs"
+      on Linglens's details page in chrome://extensions.
+    </p>
 
     <div class="row">
       <button id="save" type="button">Save</button>
