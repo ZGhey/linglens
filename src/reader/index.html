@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Linglens PDF reader</title>
+    <link rel="icon" href="/src/icons/icon-32.png" />
+  </head>
+  <body>
+    <header id="toolbar">
+      <span id="docTitle" class="title"></span>
+      <div class="group" aria-label="Pages">
+        <input id="pageNumber" type="number" min="1" value="1" aria-label="Page number" />
+        <span id="pageCount" class="muted">/ –</span>
+      </div>
+      <div class="group" aria-label="Zoom">
+        <button id="zoomOut" type="button" title="Zoom out (Ctrl -)" aria-label="Zoom out">−</button>
+        <select id="scale" aria-label="Zoom level">
+          <option value="auto">Automatic</option>
+          <option value="page-width">Page width</option>
+          <option value="page-fit">Whole page</option>
+          <option value="0.75">75%</option>
+          <option value="1">100%</option>
+          <option value="1.5">150%</option>
+          <option value="2">200%</option>
+          <option value="custom" hidden></option>
+        </select>
+        <button id="zoomIn" type="button" title="Zoom in (Ctrl +)" aria-label="Zoom in">+</button>
+      </div>
+      <div class="group" aria-label="Find">
+        <input id="findInput" type="search" placeholder="Find in PDF" aria-label="Find in PDF" />
+        <button id="findPrev" type="button" title="Previous match" aria-label="Previous match">↑</button>
+        <button id="findNext" type="button" title="Next match" aria-label="Next match">↓</button>
+        <span id="findStatus" class="muted"></span>
+      </div>
+      <div class="group end">
+        <button id="download" type="button" title="Download PDF">Download</button>
+        <button id="openNative" type="button" title="Open this PDF in Chrome's own viewer (e.g. to print)">
+          Chrome viewer
+        </button>
+      </div>
+    </header>
+    <div id="viewerContainer" tabindex="0">
+      <div id="viewer" class="pdfViewer"></div>
+    </div>
+    <div id="status" role="status"></div>
+    <script type="module" src="./index.ts"></script>
+  </body>
+</html>

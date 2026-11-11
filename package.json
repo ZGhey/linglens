@@ -23,6 +23,7 @@
     "vitest": "^2.1.4"
   },
   "dependencies": {
-    "node-html-parser": "^7.1.0"
+    "node-html-parser": "^7.1.0",
+    "pdfjs-dist": "^6.4.299"
   }
 }

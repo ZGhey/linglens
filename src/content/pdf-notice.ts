@@ -1,8 +1,8 @@
-// A small dismissible toast telling the user Linglens can't read PDFs yet.
-// Chrome renders PDFs in its built-in viewer whose text selection lives in an
-// internal frame the content script can't reach — so a selection never produces
-// a page-DOM event and the trigger icon can't appear. Rather than look broken,
-// we say so. Shadow DOM + DOM APIs only (no innerHTML) so it survives strict
+// A small dismissible toast shown when a PDF stays in Chrome's built-in viewer
+// (the Linglens reader is off or was bypassed). That viewer's text selection
+// lives in an internal frame the content script can't reach — so a selection
+// never produces a page-DOM event and the trigger icon can't appear. Rather than
+// look broken, we say so and point at the reader. Shadow DOM + DOM APIs only (no innerHTML) so it survives strict
 // Trusted-Types pages, matching the popup's Midnight-Violet glass look.
 
 import { ShadowHost } from './shadow-host'

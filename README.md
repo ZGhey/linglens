@@ -49,6 +49,10 @@ different on three axes:
 - Follow-up thread with running token-usage totals.
 - Local, searchable history of the terms you've explained (no API call to
   re-read), with a configurable cap.
+- Works in PDFs: PDFs open in a built-in reader (pdf.js) where you select and
+  explain text just like on a web page — grounded in the whole PDF, including
+  Chinese/Japanese/Korean documents. Switch back to Chrome's viewer per PDF or
+  turn the reader off in settings.
 - Configure provider, model, key, language, and length from a toolbar popup.
 
 ## Install

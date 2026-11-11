@@ -10,8 +10,10 @@ import {
   EXPLAIN_PORT,
   type ExplainRequest,
   type Message,
+  type OpenPdfReaderResponse,
   type TriggerSelectionRequest,
 } from '@/messaging/types'
+import { READER_PATH, isReaderLoadable, readerUrlFor } from '@/pdf/routing'
 
 const service = createExplainService({
   getSettings: loadSettings,
@@ -29,12 +31,46 @@ chrome.runtime.onInstalled.addListener(() => {
   })
 })
 
-/** Tell a tab's content script to explain its current selection. */
+/** Tell a tab to explain its current selection. A web page hears it through
+ *  its content script; the PDF reader (an extension page, which tabs.sendMessage
+ *  doesn't reach) hears a runtime broadcast addressed to its tab. */
 function triggerSelectionInTab(tabId: number): void {
   const msg: TriggerSelectionRequest = { type: 'TRIGGER_SELECTION' }
   void chrome.tabs.sendMessage(tabId, msg).catch(() => {
     // No content script on this page (e.g. chrome:// URLs) — nothing to do.
   })
+  const broadcast: TriggerSelectionRequest = { type: 'TRIGGER_SELECTION', tabId }
+  void chrome.runtime.sendMessage(broadcast).catch(() => {
+    // No extension page listening — nothing to do.
+  })
+}
+
+// PDFs the user (or a failed reader load) sent back to Chrome's own viewer for
+// this browser session. Session storage survives worker restarts.
+const PDF_BYPASS_KEY = 'linglens.pdfBypass'
+const MAX_BYPASSED = 200
+
+async function bypassedPdfs(): Promise<string[]> {
+  const raw = await chrome.storage.session.get(PDF_BYPASS_KEY)
+  return (raw[PDF_BYPASS_KEY] as string[] | undefined) ?? []
+}
+
+async function bypassPdf(url: string): Promise<void> {
+  const list = (await bypassedPdfs()).filter((u) => u !== url)
+  list.push(url)
+  await chrome.storage.session.set({ [PDF_BYPASS_KEY]: list.slice(-MAX_BYPASSED) })
+}
+
+/** Send a tab showing a PDF in Chrome's viewer to the Linglens reader, unless
+ *  the reader is off, the URL can't be refetched, or the user bypassed it. */
+async function openPdfReader(tabId: number, url: string): Promise<OpenPdfReaderResponse> {
+  const settings = await loadSettings()
+  if (!settings.pdfReader || !isReaderLoadable(url)) return { redirected: false }
+  if ((await bypassedPdfs()).includes(url)) return { redirected: false }
+  await chrome.tabs.update(tabId, {
+    url: readerUrlFor(chrome.runtime.getURL(READER_PATH), url),
+  })
+  return { redirected: true }
 }
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
@@ -54,14 +90,39 @@ chrome.commands.onCommand.addListener((command) => {
 function messageType(msg: unknown): Message['type'] | undefined {
   if (typeof msg === 'object' && msg !== null) {
     const t = (msg as { type?: unknown }).type
-    if (t === 'OPEN_OPTIONS') return t
+    if (t === 'OPEN_OPTIONS' || t === 'OPEN_PDF_READER' || t === 'PDF_BYPASS') return t
   }
   return undefined
 }
 
-chrome.runtime.onMessage.addListener((message) => {
-  if (messageType(message) === 'OPEN_OPTIONS') chrome.runtime.openOptionsPage()
-  return false
+function messageUrl(msg: unknown): string {
+  const url = (msg as { url?: unknown }).url
+  return typeof url === 'string' ? url : ''
+}
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  switch (messageType(message)) {
+    case 'OPEN_OPTIONS':
+      chrome.runtime.openOptionsPage()
+      return false
+    case 'OPEN_PDF_READER': {
+      const tabId = sender.tab?.id
+      if (tabId === undefined) return false
+      openPdfReader(tabId, messageUrl(message))
+        .then(sendResponse)
+        .catch(() => sendResponse({ redirected: false } satisfies OpenPdfReaderResponse))
+      return true // async response
+    }
+    case 'PDF_BYPASS':
+      // Only an extension page (the reader) may bypass — not a content script.
+      if (!sender.url?.startsWith(chrome.runtime.getURL(''))) return false
+      bypassPdf(messageUrl(message))
+        .then(() => sendResponse(true))
+        .catch(() => sendResponse(false))
+      return true
+    default:
+      return false
+  }
 })
 
 // EXPLAIN runs over a per-request port so the worker can stream token deltas

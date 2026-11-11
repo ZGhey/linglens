@@ -25,6 +25,8 @@ export interface Settings {
   verbosity: Verbosity
   /** Max explained-term history entries to retain (oldest dropped past this). */
   historyLimit: number
+  /** Open PDFs in the Linglens reader (select-to-explain) instead of Chrome's viewer. */
+  pdfReader: boolean
 }
 
 /** Preset languages offered in the settings dropdown; users can still enter a
@@ -53,6 +55,7 @@ export const DEFAULT_SETTINGS: Settings = {
   customBaseUrl: '',
   verbosity: 'concise',
   historyLimit: DEFAULT_HISTORY_LIMIT,
+  pdfReader: true,
 }
 
 const STORAGE_KEY = 'linglens.settings'
@@ -70,6 +73,7 @@ export function mergeSettings(stored: Partial<Settings> | undefined): Settings {
     customBaseUrl: stored?.customBaseUrl ?? DEFAULT_SETTINGS.customBaseUrl,
     verbosity: stored?.verbosity ?? DEFAULT_SETTINGS.verbosity,
     historyLimit: clampHistoryLimit(stored?.historyLimit ?? DEFAULT_HISTORY_LIMIT),
+    pdfReader: stored?.pdfReader ?? DEFAULT_SETTINGS.pdfReader,
   }
 }
 
