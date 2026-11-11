@@ -62,6 +62,15 @@ export const PROVIDERS: readonly ProviderDescriptor[] = [
     models: ['claude-3-5-haiku-latest', 'claude-3-5-sonnet-latest'],
   },
   {
+    id: 'openrouter',
+    label: 'OpenRouter',
+    wire: 'openai',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    // openrouter/free routes to OpenRouter's free models (rate-limited, works
+    // without credits); openrouter/auto picks a paid model per request.
+    models: ['openrouter/free', 'openrouter/auto'],
+  },
+  {
     id: 'custom',
     label: 'Custom (OpenAI-compatible)',
     wire: 'openai',

@@ -63,6 +63,17 @@ provider's terms, use a paid key, or run a local model if that matters to you.
 - No transmitting page content unless you trigger an explanation on a
   selection.
 
+## Connecting a provider account
+
+- **Free Gemini key:** Linglens opens Google AI Studio, where you create a key
+  yourself. When you paste it, Linglens checks it by listing the models it can
+  use (no text is generated) and stores it locally.
+- **Connect OpenRouter:** Linglens opens OpenRouter's sign-in page. After you
+  approve, OpenRouter redirects to Linglens's public project page with a
+  one-time code; Linglens reads that code from the address, closes the tab and
+  exchanges it (with a secret that never leaves your browser) for a key that
+  belongs to your OpenRouter account. The key is stored locally like any other.
+
 ## The PDF reader
 
 When the "Open PDFs in the Linglens reader" setting is on (the default), a PDF

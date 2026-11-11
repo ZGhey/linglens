@@ -105,3 +105,79 @@ test('configured: the settings page opens straight to the normal UI', async ({
   await expect(page.locator('#onboarding')).toBeHidden()
   await expect(page.locator('.tabs')).toBeVisible()
 })
+
+test('Connect OpenRouter: approving on openrouter.ai saves the key without copying it', async ({
+  context,
+  extensionId,
+}) => {
+  // Tabs opened by the extension bypass Playwright routing on their first
+  // navigation, so capture the auth URL in the worker instead of loading the
+  // real openrouter.ai, then play OpenRouter's part: redirect to the callback.
+  const [sw] = context.serviceWorkers()
+  await sw.evaluate(() => {
+    const g = globalThis as unknown as { __authUrl?: string }
+    chrome.tabs.create = (async (props: chrome.tabs.CreateProperties) => {
+      g.__authUrl = props.url
+      return { id: 424242 } as chrome.tabs.Tab
+    }) as typeof chrome.tabs.create
+  })
+  await context.route(/^https:\/\/github\.com\/ZGhey\/linglens\?/, (route) =>
+    route.fulfill({ status: 200, contentType: 'text/html', body: '<h1>repo</h1>' }),
+  )
+  let exchangeBody: Record<string, string> = {}
+  await context.route('https://openrouter.ai/api/v1/auth/keys', (route) => {
+    exchangeBody = JSON.parse(route.request().postData() ?? '{}')
+    return route.fulfill({ status: 200, contentType: 'application/json', body: '{"key":"sk-or-v1-e2e"}' })
+  })
+  await context.route('https://openrouter.ai/api/v1/key', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: { is_free_tier: true, free_model_daily_requests: { used: 0, limit: 50, remaining: 50 } },
+      }),
+    }),
+  )
+
+  const page = await context.newPage()
+  await page.goto(`chrome-extension://${extensionId}/src/options/index.html`)
+  await page.getByRole('button', { name: 'Connect OpenRouter' }).click()
+  await expect(page.locator('#openrouterStatus')).toContainText('Waiting for you to approve')
+
+  const authUrl = await expect
+    .poll(() => sw.evaluate(() => (globalThis as unknown as { __authUrl?: string }).__authUrl))
+    .toBeTruthy()
+    .then(() => sw.evaluate(() => (globalThis as unknown as { __authUrl: string }).__authUrl))
+  const auth = new URL(authUrl)
+  expect(auth.origin + auth.pathname).toBe('https://openrouter.ai/auth')
+  expect(auth.searchParams.get('code_challenge_method')).toBe('S256')
+  const callback = auth.searchParams.get('callback_url')!
+
+  // A forged callback with the wrong state is ignored.
+  const forged = await context.newPage()
+  await forged.goto(callback.replace(/linglens_oauth=[^&]+/, 'linglens_oauth=forged') + '&code=evil')
+  await page.waitForTimeout(500)
+  expect(exchangeBody.code).toBeUndefined()
+
+  // OpenRouter redirects the auth tab to the callback with a one-time code.
+  const authTab = await context.newPage()
+  // The worker closes the tab as soon as it sees the code, so the navigation
+  // itself may be cut short.
+  await authTab.goto(callback + '&code=test-code').catch(() => {})
+
+  await expect(page.locator('#openrouterStatus')).toContainText('50 requests left today', {
+    timeout: 15_000,
+  })
+  expect(exchangeBody.code).toBe('test-code')
+  expect(exchangeBody.code_verifier).toMatch(/^[A-Za-z0-9_-]{43}$/)
+  expect(auth.toString()).not.toContain(exchangeBody.code_verifier)
+
+  const stored = await page.evaluate(async () => (await chrome.storage.local.get('linglens.settings'))['linglens.settings'])
+  expect(stored).toMatchObject({
+    provider: 'openrouter',
+    apiKeys: { openrouter: 'sk-or-v1-e2e' },
+    models: { openrouter: 'openrouter/free' },
+  })
+  // The callback tab is closed once the code is taken.
+  await expect.poll(() => authTab.isClosed()).toBe(true)
+})

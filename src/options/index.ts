@@ -6,6 +6,8 @@
 
 import { activeConfig, loadSettings, saveSettings, LANGUAGE_PRESETS, type Settings } from '@/settings'
 import { AI_STUDIO_KEY_URL, checkGeminiKey } from '@/onboarding/gemini'
+import { fetchKeyInfo } from '@/onboarding/openrouter'
+import type { OpenRouterConnectRequest, OpenRouterResultMessage } from '@/messaging/types'
 import { PROVIDERS, PROVIDER_MAP } from '@/providers'
 import type { ProviderId } from '@/providers/types'
 import { clampHistoryLimit, trimHistory } from '@/history'
@@ -44,6 +46,8 @@ const geminiKeyEl = $<HTMLInputElement>('geminiKey')
 const geminiStatusEl = $<HTMLParagraphElement>('geminiStatus')
 const showManualEl = $<HTMLButtonElement>('showManual')
 const manualCardEl = showManualEl.closest<HTMLElement>('.card')!
+const connectOpenRouterEl = $<HTMLButtonElement>('connectOpenRouter')
+const openrouterStatusEl = $<HTMLParagraphElement>('openrouterStatus')
 
 let refreshHistory: () => void = () => {}
 
@@ -254,9 +258,17 @@ function renderSetupState(): void {
   setMainVisible(false)
 }
 
+function setStatusLine(el: HTMLElement, text: string, tone: 'ok' | 'err' | ''): void {
+  el.textContent = text
+  el.className = `hint ${tone}`.trim()
+}
+
 function setGeminiStatus(text: string, tone: 'ok' | 'err' | '' = ''): void {
-  geminiStatusEl.textContent = text
-  geminiStatusEl.className = `hint ${tone}`.trim()
+  setStatusLine(geminiStatusEl, text, tone)
+}
+
+function setOpenRouterStatus(text: string, tone: 'ok' | 'err' | '' = ''): void {
+  setStatusLine(openrouterStatusEl, text, tone)
 }
 
 function wireOnboarding(): void {
@@ -286,6 +298,40 @@ function wireOnboarding(): void {
     }
     timer = setTimeout(() => void connectGemini(key, ++latest), 300)
   })
+
+  connectOpenRouterEl.addEventListener('click', () => {
+    setOpenRouterStatus('Waiting for you to approve on OpenRouter…')
+    const msg: OpenRouterConnectRequest = { type: 'OPENROUTER_CONNECT' }
+    void chrome.runtime.sendMessage(msg).then((started) => {
+      if (!started) setOpenRouterStatus("Couldn't open OpenRouter. Try again.", 'err')
+    })
+  })
+  chrome.runtime.onMessage.addListener((message: unknown) => {
+    const msg = message as Partial<OpenRouterResultMessage> | null
+    if (msg?.type !== 'OPENROUTER_RESULT') return
+    if (!msg.ok) {
+      setOpenRouterStatus(msg.message ?? 'Connecting OpenRouter failed. Try again.', 'err')
+      return
+    }
+    void onOpenRouterConnected()
+  })
+
+  async function onOpenRouterConnected(): Promise<void> {
+    // The worker saved the key and selected OpenRouter; reflect that here.
+    settings = await loadSettings()
+    providerEl.value = settings.provider
+    showProvider(settings.provider)
+    setOpenRouterStatus('Connected. Select a word on any web page or PDF and click the Linglens icon.', 'ok')
+    manualCardEl.hidden = true
+    setMainVisible(true)
+    const info = await fetchKeyInfo(settings.apiKeys.openrouter)
+    if (info?.isFreeTier && info.freeRequestsRemaining !== null) {
+      setOpenRouterStatus(
+        `Connected — free models, ${info.freeRequestsRemaining} requests left today. Select a word on any web page or PDF and click the Linglens icon.`,
+        'ok',
+      )
+    }
+  }
 
   async function connectGemini(key: string, id: number): Promise<void> {
     setGeminiStatus('Checking your key…')

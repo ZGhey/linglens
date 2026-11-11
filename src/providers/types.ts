@@ -1,7 +1,7 @@
 import type { ErrorKind } from '@/messaging/types'
 import type { PromptPayload } from '@/pipeline/types'
 
-export type ProviderId = 'openai' | 'deepseek' | 'gemini' | 'anthropic' | 'custom'
+export type ProviderId = 'openai' | 'deepseek' | 'gemini' | 'anthropic' | 'openrouter' | 'custom'
 
 export interface ProviderConfig {
   apiKey: string

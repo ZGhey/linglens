@@ -101,9 +101,25 @@ export interface PdfBypassRequest {
   url: string
 }
 
+/** Settings page -> worker: start the OpenRouter OAuth flow in a new tab. The
+ *  worker owns the flow so it survives the settings page losing focus. */
+export interface OpenRouterConnectRequest {
+  type: 'OPENROUTER_CONNECT'
+}
+
+/** Worker -> extension pages: how the OpenRouter flow ended. On success the
+ *  key is already saved and OpenRouter selected. */
+export interface OpenRouterResultMessage {
+  type: 'OPENROUTER_RESULT'
+  ok: boolean
+  /** User-facing explanation when ok is false. */
+  message?: string
+}
+
 export type Message =
   | ExplainRequest
   | OpenOptionsRequest
   | TriggerSelectionRequest
   | OpenPdfReaderRequest
   | PdfBypassRequest
+  | OpenRouterConnectRequest

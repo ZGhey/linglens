@@ -3,7 +3,7 @@
 // ExplainService (see explain.ts).
 
 import { explainStreamWith } from '@/providers'
-import { loadSettings } from '@/settings'
+import { loadSettings, saveSettings } from '@/settings'
 import { addHistoryEntry } from '@/history'
 import { createExplainService } from './explain'
 import {
@@ -11,9 +11,20 @@ import {
   type ExplainRequest,
   type Message,
   type OpenPdfReaderResponse,
+  type OpenRouterResultMessage,
   type TriggerSelectionRequest,
 } from '@/messaging/types'
 import { READER_PATH, isReaderLoadable, looksLikePdf, readerUrlFor } from '@/pdf/routing'
+import {
+  OPENROUTER_CALLBACK_BASE,
+  OPENROUTER_DEFAULT_MODEL,
+  OpenRouterAuthError,
+  authUrl,
+  codeFromCallback,
+  exchangeCode,
+  newPendingAuth,
+  type PendingAuth,
+} from '@/onboarding/openrouter'
 
 const service = createExplainService({
   getSettings: loadSettings,
@@ -128,12 +139,95 @@ chrome.commands.onCommand.addListener((command) => {
   })
 })
 
+// --- Connect OpenRouter (OAuth PKCE) -----------------------------------------
+// The flow runs here, not in the settings page, so it survives that page losing
+// focus. The pending attempt (verifier + state) lives in session storage so it
+// also survives a worker restart while the user signs in.
+
+const OPENROUTER_PENDING_KEY = 'linglens.openrouterPending'
+
+function broadcastOpenRouterResult(result: Omit<OpenRouterResultMessage, 'type'>): void {
+  const msg: OpenRouterResultMessage = { type: 'OPENROUTER_RESULT', ...result }
+  void chrome.runtime.sendMessage(msg).catch(() => {
+    // No settings page open; the saved settings speak for themselves.
+  })
+}
+
+async function pendingOpenRouterAuth(): Promise<PendingAuth | undefined> {
+  const raw = await chrome.storage.session.get(OPENROUTER_PENDING_KEY)
+  return raw[OPENROUTER_PENDING_KEY] as PendingAuth | undefined
+}
+
+async function startOpenRouterConnect(openerTabId: number | undefined): Promise<void> {
+  const pending = newPendingAuth(Date.now())
+  pending.openerTabId = openerTabId
+  await chrome.storage.session.set({ [OPENROUTER_PENDING_KEY]: pending })
+  const tab = await chrome.tabs.create({ url: await authUrl(pending), openerTabId })
+  pending.authTabId = tab.id
+  await chrome.storage.session.set({ [OPENROUTER_PENDING_KEY]: pending })
+}
+
+/** A tab navigated: if it is our OpenRouter callback for the pending attempt,
+ *  close it, exchange the code for the key and save it. */
+async function handleOpenRouterCallback(tabId: number, url: string): Promise<void> {
+  if (!url.startsWith(OPENROUTER_CALLBACK_BASE)) return
+  const pending = await pendingOpenRouterAuth()
+  if (!pending) return
+  const code = codeFromCallback(url, pending, Date.now())
+  if (!code) return
+  await chrome.storage.session.remove(OPENROUTER_PENDING_KEY)
+  void chrome.tabs.remove(tabId).catch(() => {})
+  if (pending.openerTabId !== undefined) {
+    void chrome.tabs.update(pending.openerTabId, { active: true }).catch(() => {})
+  }
+  try {
+    const key = await exchangeCode(code, pending.verifier)
+    const settings = await loadSettings()
+    settings.apiKeys.openrouter = key
+    settings.provider = 'openrouter'
+    if (!settings.models.openrouter) settings.models.openrouter = OPENROUTER_DEFAULT_MODEL
+    await saveSettings(settings)
+    broadcastOpenRouterResult({ ok: true })
+  } catch (err) {
+    broadcastOpenRouterResult({
+      ok: false,
+      message:
+        err instanceof OpenRouterAuthError ? err.message : 'Connecting OpenRouter failed. Try again.',
+    })
+  }
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.url) void handleOpenRouterCallback(tabId, changeInfo.url)
+})
+
+// The user closed the OpenRouter tab without approving.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  void pendingOpenRouterAuth().then(async (pending) => {
+    if (pending?.authTabId !== tabId) return
+    await chrome.storage.session.remove(OPENROUTER_PENDING_KEY)
+    broadcastOpenRouterResult({ ok: false, message: 'OpenRouter sign-in was closed before approving.' })
+  })
+})
+
 function messageType(msg: unknown): Message['type'] | undefined {
   if (typeof msg === 'object' && msg !== null) {
     const t = (msg as { type?: unknown }).type
-    if (t === 'OPEN_OPTIONS' || t === 'OPEN_PDF_READER' || t === 'PDF_BYPASS') return t
+    if (
+      t === 'OPEN_OPTIONS' ||
+      t === 'OPEN_PDF_READER' ||
+      t === 'PDF_BYPASS' ||
+      t === 'OPENROUTER_CONNECT'
+    ) {
+      return t
+    }
   }
   return undefined
+}
+
+/** True for messages from the extension's own pages (not content scripts). */
+function fromExtensionPage(sender: chrome.runtime.MessageSender): boolean {
+  return sender.url?.startsWith(chrome.runtime.getURL('')) ?? false
 }
 
 function messageUrl(msg: unknown): string {
@@ -161,8 +255,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     case 'PDF_BYPASS':
       // Only an extension page (the reader) may bypass — not a content script.
-      if (!sender.url?.startsWith(chrome.runtime.getURL(''))) return false
+      if (!fromExtensionPage(sender)) return false
       bypassPdf(messageUrl(message))
+        .then(() => sendResponse(true))
+        .catch(() => sendResponse(false))
+      return true
+    case 'OPENROUTER_CONNECT':
+      if (!fromExtensionPage(sender)) return false
+      startOpenRouterConnect(sender.tab?.id)
         .then(() => sendResponse(true))
         .catch(() => sendResponse(false))
       return true
