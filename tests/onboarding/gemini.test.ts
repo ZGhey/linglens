@@ -53,9 +53,20 @@ describe('checkGeminiKey', () => {
   it('reports an invalid key', async () => {
     const result = await checkGeminiKey(
       'bad',
-      respond(400, { error: { code: 400, message: 'API key not valid. Please pass a valid API key.' } }),
+      respond(400, {
+        error: {
+          code: 400,
+          message: 'API key not valid. Please pass a valid API key.',
+          details: [{ reason: 'API_KEY_INVALID' }],
+        },
+      }),
     )
     expect(result).toMatchObject({ ok: false, reason: 'invalid' })
+  })
+
+  it('does not call an unrelated 400 an invalid key', async () => {
+    const result = await checkGeminiKey('k', respond(400, { error: { message: 'Invalid page size.' } }))
+    expect(result).toMatchObject({ ok: false, reason: 'unknown' })
   })
 
   it('reports an unsupported region distinctly', async () => {

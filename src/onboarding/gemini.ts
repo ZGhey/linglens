@@ -103,7 +103,11 @@ export async function checkGeminiKey(
         "Google doesn't offer the Gemini API in your region. Use OpenRouter or another provider with your own key instead.",
     }
   }
-  if (res.status === 400 || res.status === 401 || res.status === 403) {
+  const keyRejected =
+    res.status === 401 ||
+    res.status === 403 ||
+    (res.status === 400 && (/API_KEY_INVALID/.test(JSON.stringify(body)) || /api key/i.test(message)))
+  if (keyRejected) {
     return {
       ok: false,
       reason: 'invalid',
@@ -116,6 +120,8 @@ export async function checkGeminiKey(
   return {
     ok: false,
     reason: 'unknown',
-    message: `Google returned an unexpected error (HTTP ${res.status}). Try again in a moment.`,
+    message: message
+      ? `Google returned an error: ${message}`
+      : `Google returned an unexpected error (HTTP ${res.status}). Try again in a moment.`,
   }
 }

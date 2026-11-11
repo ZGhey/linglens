@@ -34,6 +34,7 @@ describe('PKCE', () => {
     expect(url.origin + url.pathname).toBe('https://openrouter.ai/auth')
     expect(url.searchParams.get('callback_url')).toBe(callbackUrl(pending.state))
     expect(url.searchParams.get('code_challenge_method')).toBe('S256')
+    expect(url.searchParams.get('state')).toBe(pending.state)
     expect(url.toString()).not.toContain(pending.verifier)
   })
 })
@@ -43,6 +44,14 @@ describe('codeFromCallback', () => {
 
   it('extracts the code from our callback for this attempt', () => {
     expect(codeFromCallback(`${callbackUrl('st8')}&code=abc`, pending, 2000)).toBe('abc')
+  })
+
+  it('accepts the code however OpenRouter appends it, and state from either place', () => {
+    expect(codeFromCallback(`${callbackUrl('st8')}?code=abc`, pending, 2000)).toBe('abc')
+    expect(
+      codeFromCallback('https://github.com/ZGhey/linglens?linglens_oauth=x&state=st8&code=abc', pending, 2000),
+    ).toBe('abc')
+    expect(codeFromCallback('https://github.com/ZGhey/linglens/?state=st8&code=a%2Bb', pending, 2000)).toBe('a+b')
   })
 
   it('ignores other pages, other states, missing codes and expired attempts', () => {

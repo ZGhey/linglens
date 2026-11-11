@@ -105,3 +105,48 @@ test('a keyboard trigger is ignored by a background frame holding a selection', 
   await expect(page.frameLocator('#preview').locator('#linglens-popup-host')).toHaveCount(0)
   expect(calls).toBe(0)
 })
+
+test('Linglens stays out of rich-text editor frames (designMode), but works in plain about:blank frames', async ({
+  context,
+}) => {
+  const page = await context.newPage()
+  await page.goto('/frame-host.html')
+  // Two same-origin about:blank frames: a plain one (positive control) and an
+  // editor one, like TinyMCE/CKEditor composers.
+  await page.evaluate(() => {
+    for (const id of ['plain', 'editor']) {
+      const f = document.createElement('iframe')
+      f.id = id
+      document.body.append(f)
+      const doc = f.contentDocument!
+      doc.body.innerHTML = '<p>The <span id="term">runner</span> executes jobs.</p>'
+      if (id === 'editor') doc.designMode = 'on'
+    }
+  })
+  const selectIn = (id: string) =>
+    page.evaluate((id) => {
+      const doc = (document.getElementById(id) as HTMLIFrameElement).contentDocument!
+      const el = doc.getElementById('term')!
+      const range = doc.createRange()
+      range.selectNodeContents(el)
+      const sel = doc.getSelection()!
+      sel.removeAllRanges()
+      sel.addRange(range)
+      el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, clientX: 20, clientY: 20 }))
+    }, id)
+
+  await expect(async () => {
+    await selectIn('plain')
+    await expect(page.frameLocator('#plain').locator('#linglens-trigger-host')).toBeAttached({ timeout: 1000 })
+  }).toPass({ timeout: 10_000 })
+
+  await selectIn('editor')
+  await page.waitForTimeout(1000)
+  const hostsInEditor = await page.evaluate(
+    () =>
+      (document.getElementById('editor') as HTMLIFrameElement).contentDocument!.querySelectorAll(
+        '[id^="linglens-"]',
+      ).length,
+  )
+  expect(hostsInEditor).toBe(0)
+})

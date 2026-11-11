@@ -65,6 +65,10 @@ export async function authUrl(pending: PendingAuth): Promise<string> {
     callback_url: callbackUrl(pending.state),
     code_challenge: await codeChallenge(pending.verifier),
     code_challenge_method: 'S256',
+    // Also sent as OpenRouter's own `state`, echoed on the callback, in case
+    // our query parameter doesn't survive the redirect.
+    state: pending.state,
+    key_label: 'Linglens',
   })
   return `${OPENROUTER_AUTH_URL}?${params}`
 }
@@ -84,8 +88,24 @@ export function codeFromCallback(url: string, pending: PendingAuth, now: number)
   }
   const base = new URL(OPENROUTER_CALLBACK_BASE)
   if (parsed.origin !== base.origin || parsed.pathname.replace(/\/$/, '') !== base.pathname) return null
-  if (parsed.searchParams.get(STATE_PARAM) !== pending.state) return null
-  return parsed.searchParams.get('code') || null
+  // Read parameters from the raw query rather than URLSearchParams: if the
+  // code is appended with a second '?' (".../linglens?linglens_oauth=s?code=c")
+  // URLSearchParams would fold it into the state's value.
+  const params = (name: string) =>
+    [...parsed.search.matchAll(new RegExp(`[?&]${name}=([^&?#]*)`, 'g'))].map((m) =>
+      safeDecode(m[1]),
+    )
+  const states = [...params(STATE_PARAM), ...params('state')]
+  if (!states.includes(pending.state)) return null
+  return params('code').find(Boolean) ?? null
+}
+
+function safeDecode(s: string): string {
+  try {
+    return decodeURIComponent(s)
+  } catch {
+    return s
+  }
 }
 
 export class OpenRouterAuthError extends Error {}

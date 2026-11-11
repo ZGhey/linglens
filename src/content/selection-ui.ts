@@ -99,6 +99,26 @@ function selectionAnchor(): Anchor {
   return { x: window.innerWidth / 2, y: window.innerHeight / 2 }
 }
 
+/** A document that is itself an editor (classic rich-text editors are an
+ *  iframe whose body is editable). Our overlays mount on <body>, which there
+ *  is the user's text — so Linglens stays out of such documents entirely.
+ *  Checked per event: editors switch editing on after load. */
+function isEditorDocument(): boolean {
+  return document.designMode === 'on' || document.body?.isContentEditable === true
+}
+
+/** Focus is in a child frame (or an embedded plugin view): a parent's
+ *  hasFocus() is still true then, but the user is acting in the child. */
+function focusIsInChildFrame(): boolean {
+  const el = document.activeElement
+  return (
+    el instanceof HTMLIFrameElement ||
+    el instanceof HTMLFrameElement ||
+    el instanceof HTMLEmbedElement ||
+    el instanceof HTMLObjectElement
+  )
+}
+
 /** Wire the selection UI into the current document. Call once per page. */
 export function startSelectionUi(source: DocumentSource): void {
   let popup: Popup | null = null
@@ -322,6 +342,7 @@ export function startSelectionUi(source: DocumentSource): void {
   // Primary trigger: highlight text, release the mouse. This only shows the
   // (token-free) trigger icon; clicking the icon is what explains and calls the LLM.
   document.addEventListener('mouseup', (event) => {
+    if (isEditorDocument()) return
     const target = event.target
     // A click inside our own popup or icon is not a new selection.
     if (popup && target instanceof Node && popup.element.contains(target)) return
@@ -362,7 +383,7 @@ export function startSelectionUi(source: DocumentSource): void {
     // Every frame of the tab gets a keyboard-command trigger; only the frame
     // the user is in may act, so a background frame (an ad, a widget) holding
     // its own selection can't start an explanation.
-    if (!document.hasFocus()) return
+    if (!document.hasFocus() || focusIsInChildFrame() || isEditorDocument()) return
     triggerCurrentSelection()
   })
 }
