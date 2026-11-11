@@ -34,9 +34,13 @@ chrome.runtime.onInstalled.addListener(() => {
 /** Tell a tab to explain its current selection. A web page hears it through
  *  its content script; the PDF reader (an extension page, which tabs.sendMessage
  *  doesn't reach) hears a runtime broadcast addressed to its tab. */
-function triggerSelectionInTab(tabId: number): void {
+function triggerSelectionInTab(tabId: number, frameId?: number): void {
   const msg: TriggerSelectionRequest = { type: 'TRIGGER_SELECTION' }
-  void chrome.tabs.sendMessage(tabId, msg).catch(() => {
+  // Content scripts run in every frame; deliver only to the frame the user
+  // acted in when known (context menu). Without a frame (keyboard command), the
+  // content script itself only acts in the focused frame.
+  const target = frameId !== undefined ? chrome.tabs.sendMessage(tabId, msg, { frameId }) : chrome.tabs.sendMessage(tabId, msg)
+  void target.catch(() => {
     // No content script on this page (e.g. chrome:// URLs) — nothing to do.
   })
   const broadcast: TriggerSelectionRequest = { type: 'TRIGGER_SELECTION', tabId }
@@ -112,7 +116,7 @@ async function openPdfReader(tabId: number, url: string): Promise<OpenPdfReaderR
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === CONTEXT_MENU_ID && tab?.id !== undefined) {
-    triggerSelectionInTab(tab.id)
+    triggerSelectionInTab(tab.id, info.frameId)
   }
 })
 
