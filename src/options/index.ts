@@ -7,6 +7,7 @@
 import { activeConfig, loadSettings, saveSettings, LANGUAGE_PRESETS, type Settings } from '@/settings'
 import { AI_STUDIO_KEY_URL, checkGeminiKey } from '@/onboarding/gemini'
 import { fetchKeyInfo } from '@/onboarding/openrouter'
+import { KEY_PAGES, canCheckKey, checkKeyByModels, chooseModel } from '@/onboarding/keycheck'
 import type { OpenRouterConnectRequest, OpenRouterResultMessage } from '@/messaging/types'
 import { PROVIDERS, PROVIDER_MAP } from '@/providers'
 import type { ProviderId } from '@/providers/types'
@@ -312,6 +313,10 @@ function renderAssist(provider: ProviderId): void {
     assistTextEl.textContent = t('assistOpenRouter')
     assistActionEl.textContent = t('connectOpenRouter')
     providerAssistEl.hidden = false
+  } else if (KEY_PAGES[provider]) {
+    assistTextEl.textContent = t('assistKeyPage', { provider: PROVIDER_MAP[provider].label })
+    assistActionEl.textContent = t('getApiKey')
+    providerAssistEl.hidden = false
   } else {
     providerAssistEl.hidden = true
   }
@@ -334,7 +339,8 @@ function wireKeyCheck(): void {
     clearTimeout(timer)
     const provider = currentProvider()
     const key = apiKeyEl.value.trim()
-    if ((provider !== 'gemini' && provider !== 'openrouter') || key.length < 10) {
+    const checkable = provider === 'gemini' || provider === 'openrouter' || canCheckKey(provider)
+    if (!checkable || key.length < 10) {
       setStatusLine(assistStatusEl, '', '')
       return
     }
@@ -352,6 +358,28 @@ function wireKeyCheck(): void {
         settings.models.gemini = result.model
         renderModelOptions('gemini')
         setStatusLine(assistStatusEl, result.note ?? t('keyWorksSave', { model: result.model }), 'ok')
+      } else if (provider !== 'openrouter') {
+        const result = await checkKeyByModels(provider, key)
+        if (id !== latest || currentProvider() !== provider) return
+        if (!result.ok) {
+          setStatusLine(
+            assistStatusEl,
+            result.reason === 'invalid'
+              ? t('keyRejected', { provider: PROVIDER_MAP[provider].label })
+              : result.reason === 'rate-limited'
+                ? t('errRateLimited')
+                : result.reason === 'network'
+                  ? t('errNetwork')
+                  : t('errHttp', { status: result.status ?? '?' }),
+            'err',
+          )
+          return
+        }
+        const model = chooseModel(currentModel(), PROVIDER_MAP[provider].models, result.models)
+        settings.apiKeys[provider] = key
+        settings.models[provider] = model
+        renderModelOptions(provider)
+        setStatusLine(assistStatusEl, t('keyWorksSave', { model }), 'ok')
       } else {
         const info = await fetchKeyInfo(key)
         if (id !== latest || currentProvider() !== provider) return
@@ -403,6 +431,10 @@ function wireOnboarding(): void {
   assistActionEl.addEventListener('click', () => {
     if (currentProvider() === 'gemini') void chrome.tabs.create({ url: AI_STUDIO_KEY_URL })
     else if (currentProvider() === 'openrouter') startOpenRouterConnect()
+    else {
+      const page = KEY_PAGES[currentProvider()]
+      if (page) void chrome.tabs.create({ url: page })
+    }
   })
   wireKeyCheck()
   chrome.runtime.onMessage.addListener((message: unknown) => {

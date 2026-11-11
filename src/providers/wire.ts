@@ -99,6 +99,38 @@ function geminiError(status: number, body: string): ProviderError {
   return errorFromStatus(status)
 }
 
+// --- Per-model tuning. A term explanation needs speed, not deep reasoning, and
+// current reasoning models reject sampling parameters older models accepted.
+
+/**
+ * OpenAI-wire body fields for a model id.
+ * - OpenAI reasoning models (gpt-5+, o-series): no `temperature` (only the
+ *   default is accepted) and the lightest reasoning the model allows — `none`
+ *   on Luna, `low` elsewhere (Astra and Sol reject `none`).
+ * - Official DeepSeek models: thinking is on by default (slow); turn it off.
+ * - Everything else (custom endpoints, OpenRouter ids): low temperature.
+ */
+export function openaiTuning(model: string): Record<string, unknown> {
+  if (/^(gpt-([5-9]|\d{2,})|o\d)/.test(model)) {
+    return { reasoning_effort: /luna/.test(model) ? 'none' : 'low' }
+  }
+  if (/^deepseek-(flash|v4)/.test(model)) {
+    return { thinking: { type: 'disabled' }, temperature: 0.2 }
+  }
+  return { temperature: 0.2 }
+}
+
+/**
+ * Anthropic body fields for a model id. Claude 5-series models run adaptive
+ * thinking and reject sampling parameters, so they get low effort instead of
+ * a temperature; older models keep the temperature.
+ */
+export function anthropicTuning(model: string): Record<string, unknown> {
+  const major = Number(/^claude-[a-z]+-(\d+)/.exec(model)?.[1] ?? NaN)
+  if (major >= 5) return { output_config: { effort: 'low' } }
+  return { temperature: 0.2 }
+}
+
 // --- Request builders, shared by the buffered + streaming variants of each wire.
 // `stream` toggles the provider's streaming mode (SSE); everything else is equal.
 
@@ -110,7 +142,7 @@ function openaiRequest(baseUrl: string, payload: PromptPayload, c: ProviderConfi
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.apiKey}` },
       body: JSON.stringify({
         model: c.model,
-        temperature: 0.2,
+        ...openaiTuning(c.model),
         stream,
         // Ask for usage on the final stream chunk (OpenAI needs the opt-in;
         // compatible servers either honor or ignore it).
@@ -135,8 +167,9 @@ function anthropicRequest(baseUrl: string, payload: PromptPayload, c: ProviderCo
       },
       body: JSON.stringify({
         model: c.model,
-        max_tokens: 1024,
-        temperature: 0.2,
+        // Room for adaptive thinking on current models (it counts toward max_tokens).
+        max_tokens: 2048,
+        ...anthropicTuning(c.model),
         stream,
         system: SYSTEM_PROMPT,
         messages: buildMessages(payload),
@@ -210,7 +243,9 @@ const WIRE_DEFS: Record<Wire, WireDef> = {
   },
   anthropic: {
     request: anthropicRequest,
-    extractText: (data) => (data as AnthropicResponse).content?.[0]?.text,
+    // Thinking models put a thinking block first; take the first text block.
+    extractText: (data) =>
+      (data as AnthropicResponse).content?.find((b) => typeof b.text === 'string')?.text,
     parseEvent: (data) => {
       const e = data as AnthropicStreamEvent
       return e.type === 'content_block_delta' ? e.delta?.text : undefined

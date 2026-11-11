@@ -42,6 +42,9 @@ const en = {
   openRouterKeyWorks: 'Key works. Click Save to use it.',
   openRouterKeyWorksFree: 'Key works — free models, {count} requests left today. Click Save to use it.',
   openRouterKeyRejected: 'OpenRouter rejected this key.',
+  assistKeyPage: 'Create a key in your {provider} dashboard, then paste it below — it is checked automatically.',
+  getApiKey: 'Get API key',
+  keyRejected: '{provider} rejected this key. Copy it again from the dashboard.',
 
   // Settings page — form
   tabSettings: 'Settings',
@@ -187,6 +190,9 @@ const zh: Record<MessageKey, string> = {
   openRouterKeyWorks: 'key 可用，点“保存”后生效。',
   openRouterKeyWorksFree: 'key 可用 — 免费模型，今天还剩 {count} 次。点“保存”后生效。',
   openRouterKeyRejected: 'OpenRouter 拒绝了这个 key。',
+  assistKeyPage: '在 {provider} 后台创建一个 key，然后粘贴到下面，会自动校验。',
+  getApiKey: '获取 API key',
+  keyRejected: '{provider} 拒绝了这个 key，请从后台重新复制。',
 
   tabSettings: '设置',
   tabHistory: '历史',

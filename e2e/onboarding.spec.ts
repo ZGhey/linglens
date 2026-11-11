@@ -230,7 +230,22 @@ test('configured: switching provider in Settings offers the guided way for that 
   await page.locator('#apiKey').fill('AIzaNEWKEY000000000000000000000000000000')
   await expect(page.locator('#assistStatus')).toContainText('Key works (gemini-3.1-flash-lite)')
 
-  // Providers without a guided path show no assist.
+  // Key-based providers: a link to their key page, and a pasted key is checked
+  // by listing models (no generation) and gets a model the key can use.
+  await context.route('https://api.openai.com/v1/models', (route) =>
+    route.request().headers()['authorization'] === 'Bearer sk-good-000000'
+      ? route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":[{"id":"gpt-6.1-sol"}]}' })
+      : route.fulfill({ status: 401, contentType: 'application/json', body: '{}' }),
+  )
   await page.locator('#provider').selectOption('openai')
+  await expect(page.locator('#assistAction')).toHaveText('Get API key')
+  await page.locator('#apiKey').fill('sk-bad-0000000')
+  await expect(page.locator('#assistStatus')).toContainText('OpenAI rejected this key')
+  await page.locator('#apiKey').fill('sk-good-000000')
+  await expect(page.locator('#assistStatus')).toContainText('Key works (gpt-6.1-sol)')
+  await expect(page.locator('#model')).toHaveValue('gpt-6.1-sol')
+
+  // The custom endpoint has no guided path.
+  await page.locator('#provider').selectOption('custom')
   await expect(page.locator('#providerAssist')).toBeHidden()
 })

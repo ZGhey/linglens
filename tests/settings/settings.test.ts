@@ -42,3 +42,13 @@ describe('retired models', () => {
     expect(merged.models.gemini).toBe('gemini-3.1-flash-lite')
   })
 })
+
+describe('retired models (all providers)', () => {
+  it('upgrades retired Anthropic and DeepSeek ids', () => {
+    const merged = mergeSettings({
+      models: { anthropic: 'claude-3-5-haiku-latest', deepseek: 'deepseek-chat' } as never,
+    })
+    expect(merged.models.anthropic).toBe('claude-haiku-5-5')
+    expect(merged.models.deepseek).toBe('deepseek-flash')
+  })
+})
