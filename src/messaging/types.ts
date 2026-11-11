@@ -86,6 +86,7 @@ export interface TriggerSelectionRequest {
  *  Linglens reader if the setting allows and the URL isn't bypassed. */
 export interface OpenPdfReaderRequest {
   type: 'OPEN_PDF_READER'
+  /** Informational only: the worker uses the sender's own URL (sender.url). */
   url: string
 }
 
