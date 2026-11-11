@@ -69,3 +69,39 @@ test('selecting text inside a cross-origin iframe explains it from that frame', 
   // Nothing shows up in the top frame.
   await expect(page.locator('#linglens-popup-host')).toHaveCount(0)
 })
+
+test('a keyboard trigger is ignored by a background frame holding a selection', async ({
+  context,
+}) => {
+  let [sw] = context.serviceWorkers()
+  if (!sw) sw = await context.waitForEvent('serviceworker')
+  await sw.evaluate(() =>
+    chrome.storage.local.set({
+      'linglens.settings': { provider: 'openai', apiKeys: { openai: 'sk-e2e' }, targetLang: 'English' },
+    }),
+  )
+  let calls = 0
+  await context.route('https://api.openai.com/**', (route) => {
+    calls++
+    return route.fulfill({ status: 500, body: '' })
+  })
+  const page = await context.newPage()
+  await page.goto('/frame-host.html')
+  await expect(page.frameLocator('#preview').locator('#term')).toBeAttached({ timeout: 10_000 })
+  const inner = page.frames().find((f) => f.url().startsWith('http://127.0.0.1:5199/'))!
+  // The framed page selects text programmatically while the user is in the top page.
+  await inner.evaluate(() => {
+    const range = document.createRange()
+    range.selectNodeContents(document.getElementById('term')!)
+    window.getSelection()!.addRange(range)
+  })
+  await page.locator('h1').click()
+  // What the worker sends for the keyboard command: every frame of the tab.
+  await sw.evaluate(async () => {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
+    await chrome.tabs.sendMessage(tab.id!, { type: 'TRIGGER_SELECTION' }).catch(() => {})
+  })
+  await page.waitForTimeout(1500)
+  await expect(page.frameLocator('#preview').locator('#linglens-popup-host')).toHaveCount(0)
+  expect(calls).toBe(0)
+})

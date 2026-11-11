@@ -359,6 +359,10 @@ export function startSelectionUi(source: DocumentSource): void {
     const msg = message as { type?: unknown; tabId?: unknown }
     if (msg.type !== 'TRIGGER_SELECTION') return
     if (source.tabId !== undefined && msg.tabId !== source.tabId) return
+    // Every frame of the tab gets a keyboard-command trigger; only the frame
+    // the user is in may act, so a background frame (an ad, a widget) holding
+    // its own selection can't start an explanation.
+    if (!document.hasFocus()) return
     triggerCurrentSelection()
   })
 }
