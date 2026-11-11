@@ -51,6 +51,10 @@ const showManualEl = $<HTMLButtonElement>('showManual')
 const manualCardEl = showManualEl.closest<HTMLElement>('.option')!
 const connectOpenRouterEl = $<HTMLButtonElement>('connectOpenRouter')
 const openrouterStatusEl = $<HTMLParagraphElement>('openrouterStatus')
+const providerAssistEl = $<HTMLDivElement>('providerAssist')
+const assistTextEl = $<HTMLParagraphElement>('assistText')
+const assistActionEl = $<HTMLButtonElement>('assistAction')
+const assistStatusEl = $<HTMLParagraphElement>('assistStatus')
 
 let refreshHistory: () => void = () => {}
 
@@ -108,6 +112,7 @@ function showProvider(provider: ProviderId): void {
   const descriptor = PROVIDER_MAP[provider]
   apiKeyEl.value = settings.apiKeys[provider]
   keyHintEl.textContent = t('keyHint', { provider: descriptor.label })
+  renderAssist(provider)
 
   const custom = descriptor.custom ?? false
   baseUrlLabelEl.hidden = !custom
@@ -291,7 +296,79 @@ function setGeminiStatus(text: string, tone: 'ok' | 'err' | '' = ''): void {
 }
 
 function setOpenRouterStatus(text: string, tone: 'ok' | 'err' | '' = ''): void {
+  // The flow can start from onboarding or from the settings form.
   setStatusLine(openrouterStatusEl, text, tone)
+  if (currentProvider() === 'openrouter') setStatusLine(assistStatusEl, text, tone)
+}
+
+/** Settings form: the guided way to get a key for providers that have one. */
+function renderAssist(provider: ProviderId): void {
+  setStatusLine(assistStatusEl, '', '')
+  if (provider === 'gemini') {
+    assistTextEl.textContent = t('assistGemini')
+    assistActionEl.textContent = t('openAiStudio')
+    providerAssistEl.hidden = false
+  } else if (provider === 'openrouter') {
+    assistTextEl.textContent = t('assistOpenRouter')
+    assistActionEl.textContent = t('connectOpenRouter')
+    providerAssistEl.hidden = false
+  } else {
+    providerAssistEl.hidden = true
+  }
+}
+
+function startOpenRouterConnect(): void {
+  setOpenRouterStatus(t('openRouterWaiting'))
+  const msg: OpenRouterConnectRequest = { type: 'OPENROUTER_CONNECT' }
+  void chrome.runtime.sendMessage(msg).then((started) => {
+    if (!started) setOpenRouterStatus(t('openRouterOpenFailed'), 'err')
+  })
+}
+
+/** Settings form: check a pasted key for providers we can check without
+ *  generating text, and for Gemini pick a model the key can use. */
+function wireKeyCheck(): void {
+  let latest = 0
+  let timer: ReturnType<typeof setTimeout> | undefined
+  apiKeyEl.addEventListener('input', () => {
+    clearTimeout(timer)
+    const provider = currentProvider()
+    const key = apiKeyEl.value.trim()
+    if ((provider !== 'gemini' && provider !== 'openrouter') || key.length < 10) {
+      setStatusLine(assistStatusEl, '', '')
+      return
+    }
+    const id = ++latest
+    timer = setTimeout(async () => {
+      setStatusLine(assistStatusEl, t('checkingKey'), '')
+      if (provider === 'gemini') {
+        const result = await checkGeminiKey(key)
+        if (id !== latest || currentProvider() !== provider) return
+        if (!result.ok) {
+          setStatusLine(assistStatusEl, result.message, 'err')
+          return
+        }
+        settings.apiKeys.gemini = key
+        settings.models.gemini = result.model
+        renderModelOptions('gemini')
+        setStatusLine(assistStatusEl, result.note ?? t('keyWorksSave', { model: result.model }), 'ok')
+      } else {
+        const info = await fetchKeyInfo(key)
+        if (id !== latest || currentProvider() !== provider) return
+        if (!info) {
+          setStatusLine(assistStatusEl, t('openRouterKeyRejected'), 'err')
+          return
+        }
+        setStatusLine(
+          assistStatusEl,
+          info.isFreeTier && info.freeRequestsRemaining !== null
+            ? t('openRouterKeyWorksFree', { count: info.freeRequestsRemaining })
+            : t('openRouterKeyWorks'),
+          'ok',
+        )
+      }
+    }, 300)
+  })
 }
 
 function wireOnboarding(): void {
@@ -322,13 +399,12 @@ function wireOnboarding(): void {
     timer = setTimeout(() => void connectGemini(key, ++latest), 300)
   })
 
-  connectOpenRouterEl.addEventListener('click', () => {
-    setOpenRouterStatus(t('openRouterWaiting'))
-    const msg: OpenRouterConnectRequest = { type: 'OPENROUTER_CONNECT' }
-    void chrome.runtime.sendMessage(msg).then((started) => {
-      if (!started) setOpenRouterStatus(t('openRouterOpenFailed'), 'err')
-    })
+  connectOpenRouterEl.addEventListener('click', startOpenRouterConnect)
+  assistActionEl.addEventListener('click', () => {
+    if (currentProvider() === 'gemini') void chrome.tabs.create({ url: AI_STUDIO_KEY_URL })
+    else if (currentProvider() === 'openrouter') startOpenRouterConnect()
   })
+  wireKeyCheck()
   chrome.runtime.onMessage.addListener((message: unknown) => {
     const msg = message as Partial<OpenRouterResultMessage> | null
     if (msg?.type !== 'OPENROUTER_RESULT') return

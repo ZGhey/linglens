@@ -433,8 +433,33 @@ select:disabled {
 .hint.err {
   color: var(--color-err);
 }
+.assist {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+  padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-sm);
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-sm);
+}
+.assist p {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  color: var(--color-ink-2);
+}
+.assist .btn {
+  flex: none;
+  height: 30px;
+  padding: 0 var(--space-sm);
+  font-size: var(--text-xs);
+}
+
 #geminiStatus:not(:empty),
-#openrouterStatus:not(:empty) {
+#openrouterStatus:not(:empty),
+#assistStatus:not(:empty) {
   margin-top: var(--space-sm);
   padding: var(--space-xs) var(--space-sm);
   font-size: var(--text-sm);
@@ -443,12 +468,14 @@ select:disabled {
   border-radius: var(--radius-sm);
 }
 #geminiStatus.ok,
-#openrouterStatus.ok {
+#openrouterStatus.ok,
+#assistStatus.ok {
   color: var(--color-ok);
   background: var(--color-ok-soft);
 }
 #geminiStatus.err,
-#openrouterStatus.err {
+#openrouterStatus.err,
+#assistStatus.err {
   color: var(--color-err);
   background: var(--color-err-soft);
 }

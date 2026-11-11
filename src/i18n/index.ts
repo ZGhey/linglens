@@ -35,6 +35,13 @@ const en = {
   haveKeyTitle: 'I have an API key',
   haveKeyLede: 'OpenAI, Anthropic, DeepSeek, Gemini, or any OpenAI-compatible endpoint.',
   enterKey: 'Enter key',
+  assistGemini: 'No key yet? Create one free with your Google account, then paste it below.',
+  assistOpenRouter: 'No key to copy: sign in to OpenRouter and approve.',
+  connectOpenRouter: 'Connect OpenRouter',
+  keyWorksSave: 'Key works ({model}). Click Save to use it.',
+  openRouterKeyWorks: 'Key works. Click Save to use it.',
+  openRouterKeyWorksFree: 'Key works — free models, {count} requests left today. Click Save to use it.',
+  openRouterKeyRejected: 'OpenRouter rejected this key.',
 
   // Settings page — form
   tabSettings: 'Settings',
@@ -173,6 +180,13 @@ const zh: Record<MessageKey, string> = {
   haveKeyTitle: '我已有 API key',
   haveKeyLede: 'OpenAI、Anthropic、DeepSeek、Gemini，或任何兼容 OpenAI 的接口。',
   enterKey: '手动填写',
+  assistGemini: '还没有 key？用 Google 账号免费创建一个，然后粘贴到下面。',
+  assistOpenRouter: '不用复制 key：登录 OpenRouter 并授权即可。',
+  connectOpenRouter: '一键连接 OpenRouter',
+  keyWorksSave: 'key 可用（{model}），点“保存”后生效。',
+  openRouterKeyWorks: 'key 可用，点“保存”后生效。',
+  openRouterKeyWorksFree: 'key 可用 — 免费模型，今天还剩 {count} 次。点“保存”后生效。',
+  openRouterKeyRejected: 'OpenRouter 拒绝了这个 key。',
 
   tabSettings: '设置',
   tabHistory: '历史',
