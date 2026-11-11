@@ -160,10 +160,25 @@ function geminiRequest(baseUrl: string, payload: PromptPayload, c: ProviderConfi
           role: m.role === 'assistant' ? 'model' : 'user',
           parts: [{ text: m.content }],
         })),
-        generationConfig: { temperature: 0.2 },
+        generationConfig: geminiGenerationConfig(c.model),
       }),
     },
   }
+}
+
+/**
+ * Generation settings per Gemini generation. Gemini 3+ models think before
+ * answering (Flash defaults to a medium level), which costs seconds before the
+ * first token; a term explanation doesn't need it, so non-Lite 3.x models are
+ * asked for `low` (accepted by every 3.x model). Lite models already default to
+ * minimal thinking and are left alone. Gemini 3 ignores `temperature` (and
+ * later generations reject it), so it is only sent to older models.
+ */
+export function geminiGenerationConfig(model: string): Record<string, unknown> {
+  const major = Number(/^gemini-(\d+)/.exec(model)?.[1] ?? NaN)
+  if (!(major >= 3)) return { temperature: 0.2 }
+  if (/flash-lite/.test(model)) return {}
+  return { thinkingConfig: { thinkingLevel: 'low' } }
 }
 
 // One definition per wire — the single source of truth. The buffered (WIRES)

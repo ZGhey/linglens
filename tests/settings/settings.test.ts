@@ -35,3 +35,10 @@ describe('activeConfig', () => {
     })
   })
 })
+
+describe('retired models', () => {
+  it('upgrades a stored retired Gemini model to its replacement', () => {
+    const merged = mergeSettings({ models: { gemini: 'gemini-3.5-flash' } as never })
+    expect(merged.models.gemini).toBe('gemini-3.1-flash-lite')
+  })
+})

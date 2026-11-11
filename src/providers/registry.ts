@@ -49,10 +49,11 @@ export const PROVIDERS: readonly ProviderDescriptor[] = [
     label: 'Google Gemini',
     wire: 'gemini',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
-    // 1.5/2.0 are shut down (return 404) and 2.5 is gated off many keys; 3.5-flash
-    // is the current GA headline. Presets are only a convenience — the model field
-    // is free-text, so a user can always paste a newer id from Google's docs.
-    models: ['gemini-3.5-flash', 'gemini-3.1-flash-lite'],
+    // Flash-Lite first: explaining a term needs speed, not deep reasoning, and
+    // Lite models think minimally by default. gemini-3.5-flash was retired
+    // (404) — see RETIRED_MODELS. Presets are only a convenience — the model
+    // field is free-text, so a user can always paste a newer id from Google's docs.
+    models: ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite', 'gemini-3.6-flash'],
   },
   {
     id: 'anthropic',
@@ -79,6 +80,13 @@ export const PROVIDERS: readonly ProviderDescriptor[] = [
     custom: true,
   },
 ]
+
+/** Model ids a vendor has shut down, mapped to the preset that replaces them,
+ *  so a stored retired id (often the old default) is upgraded on load instead
+ *  of failing every explanation with a 404. */
+export const RETIRED_MODELS: Partial<Record<ProviderId, Record<string, string>>> = {
+  gemini: { 'gemini-3.5-flash': 'gemini-3.1-flash-lite' },
+}
 
 export const PROVIDER_MAP: Record<ProviderId, ProviderDescriptor> = Object.fromEntries(
   PROVIDERS.map((p) => [p.id, p]),
