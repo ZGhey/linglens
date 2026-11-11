@@ -366,7 +366,9 @@ function wireKeyCheck(): void {
             assistStatusEl,
             result.reason === 'invalid'
               ? t('keyRejected', { provider: PROVIDER_MAP[provider].label })
-              : result.reason === 'rate-limited'
+              : result.reason === 'unverified'
+                ? t('keyUnverified')
+                : result.reason === 'rate-limited'
                 ? t('errRateLimited')
                 : result.reason === 'network'
                   ? t('errNetwork')

@@ -16,13 +16,15 @@ export interface ProviderCall {
   extractUsage?: (data: unknown) => TokenUsage | undefined
   /** Optional provider-specific status->error mapping (defaults to errorFromStatus). */
   mapError?: (status: number, body: string) => ProviderError
+  /** The same request without optional tuning fields, retried once on HTTP 400. */
+  buildFallbackRequest?: (config: ProviderConfig) => { url: string; init: RequestInit }
 }
 
 export async function callProvider(
   config: ProviderConfig,
   call: ProviderCall,
 ): Promise<ExplainResult> {
-  const res = await sendProviderRequest(config, call.buildRequest, call.mapError)
+  const res = await sendProviderRequest(config, call.buildRequest, call.mapError, call.buildFallbackRequest)
   const data = (await res.json()) as unknown
   const text = call.extractText(data)?.trim()
   if (!text) throw new ProviderError('unknown', t('errEmptyResponse'))

@@ -37,7 +37,11 @@ const LIST_MODELS: Partial<Record<ProviderId, ListSpec>> = {
 
 export type ModelsKeyCheck =
   | { ok: true; models: string[] }
-  | { ok: false; reason: 'invalid' | 'rate-limited' | 'network' | 'unknown'; status?: number }
+  | {
+      ok: false
+      reason: 'invalid' | 'unverified' | 'rate-limited' | 'network' | 'unknown'
+      status?: number
+    }
 
 export function canCheckKey(provider: ProviderId): boolean {
   return provider in LIST_MODELS
@@ -57,7 +61,10 @@ export async function checkKeyByModels(
   } catch {
     return { ok: false, reason: 'network' }
   }
-  if (res.status === 401 || res.status === 403) return { ok: false, reason: 'invalid', status: res.status }
+  if (res.status === 401) return { ok: false, reason: 'invalid', status: 401 }
+  // 403: a restricted key may lack the list-models permission yet still work
+  // for chat — we can't verify it, but it isn't necessarily wrong.
+  if (res.status === 403) return { ok: false, reason: 'unverified', status: 403 }
   if (res.status === 429) return { ok: false, reason: 'rate-limited', status: 429 }
   if (!res.ok) return { ok: false, reason: 'unknown', status: res.status }
   const body = (await res.json().catch(() => null)) as { data?: { id?: unknown }[] } | null
