@@ -40,7 +40,7 @@ export interface DocumentSource {
 }
 
 /** A viewport point the popup is anchored to. */
-interface Anchor {
+export interface Anchor {
   x: number
   y: number
 }
@@ -119,8 +119,18 @@ function focusIsInChildFrame(): boolean {
   )
 }
 
+/** Hooks for selections the browser can't see (a site that draws its own
+ *  text, e.g. Gmail's PDF preview), made by site-specific code. */
+export interface SelectionUi {
+  /** Offer the trigger icon for a term at a viewport point. Ignored when the
+   *  term isn't icon-worthy (empty, very long). */
+  offer(term: string, anchor: Anchor, hint: string | Promise<string>): void
+  /** Hide the trigger icon. */
+  dismiss(): void
+}
+
 /** Wire the selection UI into the current document. Call once per page. */
-export function startSelectionUi(source: DocumentSource): void {
+export function startSelectionUi(source: DocumentSource): SelectionUi {
   let popup: Popup | null = null
   /** The token-free trigger icon shown after a selection, if any. */
   let icon: TriggerIcon | null = null
@@ -355,8 +365,11 @@ export function startSelectionUi(source: DocumentSource): void {
     }
     // Capture the selection's context now — it may be gone by the time the user
     // clicks the icon.
-    const hint = source.contextHint()
-    const anchor = { x: event.clientX, y: event.clientY }
+    offerIcon(term, { x: event.clientX, y: event.clientY }, source.contextHint())
+  })
+
+  /** Show the token-free trigger icon for a term; clicking it explains. */
+  function offerIcon(term: string, anchor: Anchor, hint: string | Promise<string>): void {
     dismissIcon()
     const active = new TriggerIcon(() => {
       dismissIcon()
@@ -364,7 +377,7 @@ export function startSelectionUi(source: DocumentSource): void {
     })
     icon = active
     active.showAt(anchor.x, anchor.y)
-  })
+  }
 
   // Dismiss the icon when the anchor goes stale or the user backs out.
   window.addEventListener('scroll', dismissIcon, true)
@@ -386,4 +399,12 @@ export function startSelectionUi(source: DocumentSource): void {
     if (!document.hasFocus() || focusIsInChildFrame() || isEditorDocument()) return
     triggerCurrentSelection()
   })
+
+  return {
+    offer: (term, anchor, hint) => {
+      const t = term.trim()
+      if (t && shouldOfferIcon(t) && !isEditorDocument()) offerIcon(t, anchor, hint)
+    },
+    dismiss: dismissIcon,
+  }
 }

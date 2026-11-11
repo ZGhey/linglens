@@ -3,6 +3,7 @@
 
 import { blockContextHint, startSelectionUi } from './selection-ui'
 import { showPdfNotice } from './pdf-notice'
+import { GMAIL_ORIGIN, startGmailPreviewSelection } from './sites/gmail'
 import type { OpenPdfReaderRequest, OpenPdfReaderResponse } from '@/messaging/types'
 
 /** True when Chrome is showing a PDF in its built-in viewer — where text
@@ -53,9 +54,13 @@ function maybeNotifyPdfOnce(): void {
   })
 }
 
-startSelectionUi({
+/** A document supplied by site-specific code for the current selection (e.g.
+ *  the text of Gmail's PDF preview), used instead of the page's HTML. */
+let siteDocument: { html: string } | null = null
+
+const ui = startSelectionUi({
   url: () => location.href,
-  html: () => document.documentElement.outerHTML,
+  html: () => siteDocument?.html ?? document.documentElement.outerHTML,
   contextHint: blockContextHint,
   // An explicit trigger with no reachable selection on a PDF: say why rather
   // than do nothing.
@@ -63,6 +68,10 @@ startSelectionUi({
     if (isTopFrame && isPdfView()) showPdfNotice(PDF_VIEWER_NOTICE)
   },
 })
+
+if (isTopFrame && location.origin === GMAIL_ORIGIN) {
+  startGmailPreviewSelection(ui, (doc) => (siteDocument = doc))
+}
 
 void maybeOpenPdfReader().then((redirected) => {
   if (!redirected) maybeNotifyPdfOnce()
