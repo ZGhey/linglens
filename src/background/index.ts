@@ -4,6 +4,7 @@
 
 import { explainStreamWith } from '@/providers'
 import { loadSettings, saveSettings } from '@/settings'
+import { t } from '@/i18n'
 import { addHistoryEntry } from '@/history'
 import { createExplainService } from './explain'
 import {
@@ -37,7 +38,7 @@ const CONTEXT_MENU_ID = 'linglens-explain'
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: CONTEXT_MENU_ID,
-    title: 'Explain with Linglens',
+    title: t('explainWithLinglens'),
     contexts: ['selection'],
   })
 })
@@ -192,7 +193,7 @@ async function handleOpenRouterCallback(tabId: number, url: string): Promise<voi
     broadcastOpenRouterResult({
       ok: false,
       message:
-        err instanceof OpenRouterAuthError ? err.message : 'Connecting OpenRouter failed. Try again.',
+        err instanceof OpenRouterAuthError ? err.message : t('openRouterFailed'),
     })
   }
 }
@@ -206,7 +207,7 @@ chrome.tabs.onRemoved.addListener((tabId) => {
   void pendingOpenRouterAuth().then(async (pending) => {
     if (pending?.authTabId !== tabId) return
     await chrome.storage.session.remove(OPENROUTER_PENDING_KEY)
-    broadcastOpenRouterResult({ ok: false, message: 'OpenRouter sign-in was closed before approving.' })
+    broadcastOpenRouterResult({ ok: false, message: t('openRouterClosed') })
   })
 })
 

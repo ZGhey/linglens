@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import { ProviderError, type ExplainResult, type ProviderConfig, type TokenUsage } from './types'
 import { sendProviderRequest } from './http'
 
@@ -24,6 +25,6 @@ export async function callProvider(
   const res = await sendProviderRequest(config, call.buildRequest, call.mapError)
   const data = (await res.json()) as unknown
   const text = call.extractText(data)?.trim()
-  if (!text) throw new ProviderError('unknown', 'The provider returned an empty response.')
+  if (!text) throw new ProviderError('unknown', t('errEmptyResponse'))
   return { text, usage: call.extractUsage?.(data) }
 }

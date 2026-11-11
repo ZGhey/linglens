@@ -1,0 +1,8 @@
+{
+  "extDescription": {
+    "message": "在网页或 PDF 上选中任意词语，结合全文语境用你的语言解释。使用你自己的 API key，隐私安全。"
+  },
+  "cmdExplainSelection": {
+    "message": "用 Linglens 解释当前选中的文字"
+  }
+}

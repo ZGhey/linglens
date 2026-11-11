@@ -11,7 +11,7 @@
       <img src="../icons/icon-48.png" alt="" />
       <div>
         <h1>Linglens</h1>
-        <p class="tagline">Explain any term, in context</p>
+        <p class="tagline" data-i18n="appTagline"></p>
       </div>
       <span id="connection" class="connection" role="status"></span>
     </header>
@@ -19,137 +19,125 @@
     <!-- Toolbar popup, not set up yet: setup runs in a tab, because the popup
          closes as soon as focus moves to Google's sign-in page. -->
     <div id="setupCta" class="card featured" hidden>
-      <h2>Connect a model to start</h2>
-      <p class="lede">A free Gemini key or your OpenRouter account — about 30 seconds.</p>
-      <button id="openSetup" type="button" class="btn block cta">Set up Linglens</button>
+      <h2 data-i18n="setupCtaTitle"></h2>
+      <p class="lede" data-i18n="setupCtaLede"></p>
+      <button id="openSetup" type="button" class="btn block cta" data-i18n="setupCtaButton"></button>
     </div>
 
     <section id="onboarding" hidden aria-labelledby="onboardingTitle">
       <div class="setup-intro">
-        <h2 id="onboardingTitle">Connect a model</h2>
-        <p>Linglens writes explanations with an AI model you choose. Your key stays in this browser.</p>
+        <h2 id="onboardingTitle" data-i18n="onboardingTitle"></h2>
+        <p data-i18n="onboardingLede"></p>
       </div>
 
       <div class="card featured">
-        <h2>Free Gemini key <span class="badge">Recommended</span></h2>
-        <p class="lede">Use your Google account. No credit card.</p>
+        <h2><span data-i18n="geminiCardTitle"></span> <span class="badge" data-i18n="recommended"></span></h2>
+        <p class="lede" data-i18n="geminiCardLede"></p>
         <ol class="steps">
           <li>
-            <button id="openAiStudio" type="button" class="btn">Open Google AI Studio</button>
+            <button id="openAiStudio" type="button" class="btn" data-i18n="openAiStudio"></button>
           </li>
-          <li>Click <b>Create API key</b>, then copy it.</li>
+          <li data-i18n="geminiStep2"></li>
           <li>
-            Paste it here — it's checked automatically.
-            <input id="geminiKey" type="password" autocomplete="off" placeholder="AIza…" aria-label="Gemini API key" />
+            <span data-i18n="geminiStep3"></span>
+            <input id="geminiKey" type="password" autocomplete="off" placeholder="AIza…" data-i18n-aria="geminiKeyLabel" />
           </li>
         </ol>
         <p id="geminiStatus" class="hint" role="status" aria-live="polite"></p>
-        <p class="note">
-          When you explain something, the selected text and a short summary of the page go to
-          Google. Google's free tier may use them to improve its products.
-        </p>
+        <p class="note" data-i18n="geminiPrivacy"></p>
       </div>
 
       <div class="option-list">
         <div class="option">
           <div class="option-head">
             <div>
-              <h3>OpenRouter</h3>
-              <p>Sign in and approve — no key to copy. Free models included (daily limit).</p>
+              <h3 data-i18n="openRouterTitle"></h3>
+              <p data-i18n="openRouterLede"></p>
             </div>
-            <button id="connectOpenRouter" type="button" class="btn secondary">Connect</button>
+            <button id="connectOpenRouter" type="button" class="btn secondary" data-i18n="connect"></button>
           </div>
           <p id="openrouterStatus" class="hint" role="status" aria-live="polite"></p>
         </div>
         <div class="option">
           <div class="option-head">
             <div>
-              <h3>I have an API key</h3>
-              <p>OpenAI, Anthropic, DeepSeek, Gemini, or any OpenAI-compatible endpoint.</p>
+              <h3 data-i18n="haveKeyTitle"></h3>
+              <p data-i18n="haveKeyLede"></p>
             </div>
-            <button id="showManual" type="button" class="btn secondary">Enter key</button>
+            <button id="showManual" type="button" class="btn secondary" data-i18n="enterKey"></button>
           </div>
         </div>
       </div>
     </section>
 
     <div class="tabs" role="tablist">
-      <button class="tab" id="tab-btn-settings" type="button" role="tab" aria-selected="true">Settings</button>
-      <button class="tab" id="tab-btn-history" type="button" role="tab" aria-selected="false">History</button>
+      <button class="tab" id="tab-btn-settings" type="button" role="tab" aria-selected="true" data-i18n="tabSettings"></button>
+      <button class="tab" id="tab-btn-history" type="button" role="tab" aria-selected="false" data-i18n="tabHistory"></button>
     </div>
 
     <div id="tab-settings" class="tab-panel" role="tabpanel">
       <section class="group">
-        <h2 class="group-title">Model</h2>
+        <h2 class="group-title" data-i18n="groupModel"></h2>
         <div class="card">
           <div class="field">
-            <label for="provider">Provider</label>
+            <label for="provider" data-i18n="provider"></label>
             <select id="provider"></select>
           </div>
 
           <div class="field" id="baseUrlField">
-            <label for="baseUrl" id="baseUrlLabel" hidden>Base URL</label>
+            <label for="baseUrl" id="baseUrlLabel" hidden data-i18n="baseUrl"></label>
             <input id="baseUrl" autocomplete="off" placeholder="https://host/v1" hidden />
-            <p class="hint" id="baseUrlHint" hidden>OpenAI-compatible endpoint. /chat/completions is appended.</p>
+            <p class="hint" id="baseUrlHint" hidden data-i18n="baseUrlHint"></p>
           </div>
 
           <div class="field">
-            <label for="model">Model</label>
+            <label for="model" data-i18n="model"></label>
             <select id="model"></select>
             <input id="modelCustom" autocomplete="off" placeholder="e.g. gemini-3.1-flash-lite" hidden />
-            <p class="hint" id="modelCustomHint" hidden>
-              Paste an exact model id from your provider's docs. If a preset returns a 404,
-              pick Custom and enter the current id.
-            </p>
+            <p class="hint" id="modelCustomHint" hidden data-i18n="modelCustomHint"></p>
           </div>
 
           <div class="field">
-            <label for="apiKey">API key</label>
+            <label for="apiKey" data-i18n="apiKey"></label>
             <input id="apiKey" type="password" autocomplete="off" placeholder="sk-…" />
             <p class="hint" id="keyHint"></p>
           </div>
 
-          <p class="note">
-            A provider's free tier may use your prompts to improve its products (Gemini's free
-            tier does; its paid tier doesn't). Use a paid key or a local model if that matters.
-          </p>
+          <p class="note" data-i18n="freeTierNote"></p>
         </div>
       </section>
 
       <section class="group">
-        <h2 class="group-title">Explanations</h2>
+        <h2 class="group-title" data-i18n="groupExplanations"></h2>
         <div class="card">
           <div class="field">
-            <label for="lang">Language</label>
+            <label for="lang" data-i18n="language"></label>
             <select id="lang"></select>
-            <input id="langCustom" autocomplete="off" placeholder="e.g. Italiano, 日本語" hidden aria-label="Custom language" />
+            <input id="langCustom" autocomplete="off" placeholder="e.g. Italiano, 日本語" hidden data-i18n-aria="customLanguage" />
           </div>
           <div class="field">
-            <label for="verbosity">Length</label>
+            <label for="verbosity" data-i18n="length"></label>
             <select id="verbosity">
-              <option value="concise">Concise — 1–2 sentences</option>
-              <option value="detailed">Detailed — 4–6 sentences with an example</option>
+              <option value="concise" data-i18n="lengthConcise"></option>
+              <option value="detailed" data-i18n="lengthDetailed"></option>
             </select>
           </div>
         </div>
       </section>
 
       <section class="group">
-        <h2 class="group-title">PDFs</h2>
+        <h2 class="group-title" data-i18n="groupPdfs"></h2>
         <div class="card">
           <label class="switch-row" for="pdfReader">
-            <span>Open PDFs in the Linglens reader</span>
+            <span data-i18n="pdfReaderToggle"></span>
             <input id="pdfReader" type="checkbox" role="switch" />
           </label>
-          <p class="hint">
-            Select text in any PDF to explain it, like on web pages. Turn off to keep Chrome's
-            viewer. Local files also need “Allow access to file URLs” in chrome://extensions.
-          </p>
+          <p class="hint" data-i18n="pdfReaderHint"></p>
         </div>
       </section>
 
       <div class="savebar">
-        <button id="save" type="button" class="btn">Save changes</button>
+        <button id="save" type="button" class="btn" data-i18n="saveChanges"></button>
         <span id="status" role="status" aria-live="polite"></span>
       </div>
     </div>
@@ -157,20 +145,20 @@
     <div id="tab-history" class="tab-panel" role="tabpanel" hidden>
       <div class="history-head">
         <div class="field">
-          <label for="historyLimit">Keep last</label>
+          <label for="historyLimit" data-i18n="keepLast"></label>
           <input id="historyLimit" type="number" min="1" max="1000" step="1" />
         </div>
-        <p class="hint">entries (1–1000). Saved with Settings. Re-reading an entry makes no API call.</p>
+        <p class="hint" data-i18n="historyHint"></p>
       </div>
       <div id="history"></div>
-      <button id="clearHistory" type="button" class="btn ghost" hidden>Clear history</button>
+      <button id="clearHistory" type="button" class="btn ghost" hidden data-i18n="clearHistory"></button>
     </div>
 
     <p class="colophon">
-      Open source ·
+      <span data-i18n="openSource"></span> ·
       <a href="https://github.com/ZGhey/linglens" target="_blank" rel="noreferrer">GitHub</a>
       ·
-      <a href="https://github.com/ZGhey/linglens/blob/main/PRIVACY.md" target="_blank" rel="noreferrer">Privacy</a>
+      <a href="https://github.com/ZGhey/linglens/blob/main/PRIVACY.md" target="_blank" rel="noreferrer" data-i18n="privacy"></a>
     </p>
 
     <script type="module" src="./index.ts"></script>

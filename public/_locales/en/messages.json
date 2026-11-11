@@ -1,0 +1,8 @@
+{
+  "extDescription": {
+    "message": "Select any term on a page; get it explained in your language, grounded in the page — with your own API key. Private."
+  },
+  "cmdExplainSelection": {
+    "message": "Explain the current selection with Linglens"
+  }
+}

@@ -15,6 +15,7 @@ import type { TokenUsage } from '@/providers/types'
 import { addUsage } from '@/settings'
 import { Popup } from './popup'
 import { TriggerIcon } from './trigger-icon'
+import { t } from '@/i18n'
 
 /** Where the document being explained comes from. */
 export interface DocumentSource {
@@ -216,7 +217,7 @@ export function startSelectionUi(source: DocumentSource): SelectionUi {
         onInterrupted: () =>
           active.renderError(
             term,
-            { kind: 'unknown', message: 'The explanation was interrupted.' },
+            { kind: 'unknown', message: t('errInterrupted') },
             openSettings,
           ),
       })
@@ -329,7 +330,7 @@ export function startSelectionUi(source: DocumentSource): SelectionUi {
         onInterrupted: () => {
           renderSession(active, session)
           active.showFollowUpError(
-            { kind: 'unknown', message: 'The follow-up was interrupted.' },
+            { kind: 'unknown', message: t('errFollowUpInterrupted') },
             openSettings,
           )
         },

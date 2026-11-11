@@ -10,34 +10,32 @@
     <header id="toolbar">
       <span id="docTitle" class="title"></span>
       <div class="group" aria-label="Pages">
-        <input id="pageNumber" type="number" min="1" value="1" aria-label="Page number" />
+        <input id="pageNumber" type="number" min="1" value="1" data-i18n-aria="pageNumber" />
         <span id="pageCount" class="muted">/ –</span>
       </div>
       <div class="group" aria-label="Zoom">
-        <button id="zoomOut" type="button" title="Zoom out (Ctrl -)" aria-label="Zoom out">−</button>
-        <select id="scale" aria-label="Zoom level">
-          <option value="auto">Automatic</option>
-          <option value="page-width">Page width</option>
-          <option value="page-fit">Whole page</option>
+        <button id="zoomOut" type="button" data-i18n-title="zoomOut" data-i18n-aria="zoomOut">−</button>
+        <select id="scale" data-i18n-aria="zoomLevel">
+          <option value="auto" data-i18n="zoomAuto"></option>
+          <option value="page-width" data-i18n="zoomPageWidth"></option>
+          <option value="page-fit" data-i18n="zoomPageFit"></option>
           <option value="0.75">75%</option>
           <option value="1">100%</option>
           <option value="1.5">150%</option>
           <option value="2">200%</option>
           <option value="custom" hidden></option>
         </select>
-        <button id="zoomIn" type="button" title="Zoom in (Ctrl +)" aria-label="Zoom in">+</button>
+        <button id="zoomIn" type="button" data-i18n-title="zoomIn" data-i18n-aria="zoomIn">+</button>
       </div>
       <div class="group" aria-label="Find">
-        <input id="findInput" type="search" placeholder="Find in PDF" aria-label="Find in PDF" />
-        <button id="findPrev" type="button" title="Previous match" aria-label="Previous match">↑</button>
-        <button id="findNext" type="button" title="Next match" aria-label="Next match">↓</button>
+        <input id="findInput" type="search" data-i18n-placeholder="findPlaceholder" data-i18n-aria="findPlaceholder" />
+        <button id="findPrev" type="button" data-i18n-title="findPrevious" data-i18n-aria="findPrevious">↑</button>
+        <button id="findNext" type="button" data-i18n-title="findNext" data-i18n-aria="findNext">↓</button>
         <span id="findStatus" class="muted"></span>
       </div>
       <div class="group end">
-        <button id="download" type="button" title="Download PDF">Download</button>
-        <button id="openNative" type="button" title="Open this PDF in Chrome's own viewer (e.g. to print)">
-          Chrome viewer
-        </button>
+        <button id="download" type="button" data-i18n-title="downloadTitle" data-i18n="download"></button>
+        <button id="openNative" type="button" data-i18n-title="chromeViewerTitle" data-i18n="chromeViewer"></button>
       </div>
     </header>
     <div id="viewerContainer" tabindex="0">

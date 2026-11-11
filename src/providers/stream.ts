@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import { ProviderError, type ExplainResult, type ProviderConfig, type TokenUsage } from './types'
 import { sendProviderRequest } from './http'
 
@@ -39,7 +40,7 @@ export async function streamProvider(
     // already-consumed tokens — and emit the whole thing as one delta.
     const data = (await res.json().catch(() => undefined)) as unknown
     const text = spec.extractText(data)?.trim()
-    if (!text) throw new ProviderError('unknown', 'The provider returned an empty response.')
+    if (!text) throw new ProviderError('unknown', t('errEmptyResponse'))
     onDelta(text)
     return { text, usage: spec.extractUsage?.(data) }
   }
@@ -92,7 +93,7 @@ export async function streamProvider(
 
   const text = full.trim()
   if (!text) {
-    throw new ProviderError('unknown', 'The provider returned an empty response.')
+    throw new ProviderError('unknown', t('errEmptyResponse'))
   }
   return {
     text,

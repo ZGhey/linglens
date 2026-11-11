@@ -12,6 +12,7 @@ import { PROVIDERS, PROVIDER_MAP } from '@/providers'
 import type { ProviderId } from '@/providers/types'
 import { clampHistoryLimit, trimHistory } from '@/history'
 import { mountHistory } from './history-view'
+import { localizeDom, t } from '@/i18n'
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T
 
@@ -78,7 +79,7 @@ function renderModelOptions(provider: ProviderId): void {
   }
   const customOpt = document.createElement('option')
   customOpt.value = CUSTOM_MODEL
-  customOpt.textContent = 'Custom…'
+  customOpt.textContent = t('customOption')
   modelEl.appendChild(customOpt)
 
   const stored = settings.models[provider]
@@ -106,7 +107,7 @@ function syncModelCustomVisibility(): void {
 function showProvider(provider: ProviderId): void {
   const descriptor = PROVIDER_MAP[provider]
   apiKeyEl.value = settings.apiKeys[provider]
-  keyHintEl.textContent = `Enter your ${descriptor.label} API key.`
+  keyHintEl.textContent = t('keyHint', { provider: descriptor.label })
 
   const custom = descriptor.custom ?? false
   baseUrlLabelEl.hidden = !custom
@@ -148,7 +149,7 @@ function renderLanguageOptions(): void {
   }
   const customOpt = document.createElement('option')
   customOpt.value = CUSTOM_LANG
-  customOpt.textContent = 'Custom…'
+  customOpt.textContent = t('customOption')
   langEl.appendChild(customOpt)
 
   if (LANGUAGE_PRESETS.includes(settings.targetLang)) {
@@ -176,6 +177,8 @@ function currentLanguage(): string {
 }
 
 async function init(): Promise<void> {
+  localizeDom()
+  document.title = t('pageTitle')
   settings = await loadSettings()
 
   for (const descriptor of PROVIDERS) {
@@ -253,7 +256,7 @@ function renderConnection(): void {
     connectionEl.title = cfg.model ? `${label} · ${cfg.model}` : label
     connectionEl.dataset.state = 'on'
   } else {
-    connectionEl.textContent = 'Not set up'
+    connectionEl.textContent = t('notSetUp')
     connectionEl.title = ''
     connectionEl.dataset.state = 'off'
   }
@@ -320,17 +323,17 @@ function wireOnboarding(): void {
   })
 
   connectOpenRouterEl.addEventListener('click', () => {
-    setOpenRouterStatus('Waiting for you to approve on OpenRouter…')
+    setOpenRouterStatus(t('openRouterWaiting'))
     const msg: OpenRouterConnectRequest = { type: 'OPENROUTER_CONNECT' }
     void chrome.runtime.sendMessage(msg).then((started) => {
-      if (!started) setOpenRouterStatus("Couldn't open OpenRouter. Try again.", 'err')
+      if (!started) setOpenRouterStatus(t('openRouterOpenFailed'), 'err')
     })
   })
   chrome.runtime.onMessage.addListener((message: unknown) => {
     const msg = message as Partial<OpenRouterResultMessage> | null
     if (msg?.type !== 'OPENROUTER_RESULT') return
     if (!msg.ok) {
-      setOpenRouterStatus(msg.message ?? 'Connecting OpenRouter failed. Try again.', 'err')
+      setOpenRouterStatus(msg.message ?? t('openRouterFailed'), 'err')
       return
     }
     void onOpenRouterConnected()
@@ -341,21 +344,21 @@ function wireOnboarding(): void {
     settings = await loadSettings()
     providerEl.value = settings.provider
     showProvider(settings.provider)
-    setOpenRouterStatus('Connected. Select a word on any web page or PDF and click the Linglens icon.', 'ok')
+    setOpenRouterStatus(t('openRouterConnected'), 'ok')
     manualCardEl.hidden = true
     setMainVisible(true)
     renderConnection()
     const info = await fetchKeyInfo(settings.apiKeys.openrouter)
     if (info?.isFreeTier && info.freeRequestsRemaining !== null) {
       setOpenRouterStatus(
-        `Connected — free models, ${info.freeRequestsRemaining} requests left today. Select a word on any web page or PDF and click the Linglens icon.`,
+        t('openRouterConnectedFree', { count: info.freeRequestsRemaining }),
         'ok',
       )
     }
   }
 
   async function connectGemini(key: string, id: number): Promise<void> {
-    setGeminiStatus('Checking your key…')
+    setGeminiStatus(t('checkingKey'))
     const result = await checkGeminiKey(key)
     if (id !== latest) return
     if (!result.ok) {
@@ -370,7 +373,7 @@ function wireOnboarding(): void {
     showProvider('gemini')
     setGeminiStatus(
       result.note ??
-        `Connected (${result.model}). Select a word on any web page or PDF and click the Linglens icon.`,
+        t('geminiConnected', { model: result.model }),
       'ok',
     )
     manualCardEl.hidden = true
@@ -401,7 +404,7 @@ async function save(): Promise<void> {
   await trimHistory(settings.historyLimit)
   refreshHistory()
   renderConnection()
-  statusEl.textContent = 'Saved'
+  statusEl.textContent = t('saved')
   setTimeout(() => (statusEl.textContent = ''), 1500)
 }
 

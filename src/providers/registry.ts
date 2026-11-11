@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import type { PromptPayload } from '@/pipeline/types'
 import {
   ProviderError,
@@ -108,7 +109,7 @@ export function providerFromDescriptor(d: ProviderDescriptor): Provider {
       const baseUrl = resolveBaseUrl(config)
       if (!baseUrl) {
         return Promise.reject(
-          new ProviderError('unknown', 'No base URL set. Add one in Linglens settings.'),
+          new ProviderError('unknown', t('errNoBaseUrl')),
         )
       }
       return callProvider(config, WIRES[d.wire](baseUrl, payload))
@@ -121,7 +122,7 @@ export function providerFromDescriptor(d: ProviderDescriptor): Provider {
     ): Promise<ExplainResult> {
       const baseUrl = resolveBaseUrl(config)
       if (!baseUrl) {
-        throw new ProviderError('unknown', 'No base URL set. Add one in Linglens settings.')
+        throw new ProviderError('unknown', t('errNoBaseUrl'))
       }
       // streamProvider itself buffers-in-place when the endpoint ignores
       // stream:true, so a non-streaming endpoint costs exactly one request.

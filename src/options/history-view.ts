@@ -3,6 +3,7 @@
 // explanation — nothing here talks to a provider.
 
 import { loadHistory, clearHistory, type HistoryEntry } from '@/history'
+import { t } from '@/i18n'
 
 function safeHost(url: string): string {
   try {
@@ -23,7 +24,7 @@ function renderEntry(entry: HistoryEntry): HTMLElement {
   const when = document.createElement('span')
   when.className = 'when'
   const source = entry.title || safeHost(entry.url)
-  when.textContent = ` — ${source} · ${new Date(entry.at).toLocaleDateString()}`
+  when.textContent = `${source} · ${new Date(entry.at).toLocaleDateString()}`
   summary.appendChild(when)
   item.appendChild(summary)
 
@@ -38,8 +39,7 @@ function renderEntry(entry: HistoryEntry): HTMLElement {
     link.href = entry.url
     link.target = '_blank'
     link.rel = 'noreferrer'
-    link.textContent = 'Open page'
-    link.style.fontSize = '12px'
+    link.textContent = t('openPage')
     item.appendChild(link)
   }
   return item
@@ -55,7 +55,7 @@ async function renderHistory(container: HTMLElement, clearBtn: HTMLButtonElement
   if (entries.length === 0) {
     const empty = document.createElement('div')
     empty.className = 'empty'
-    empty.textContent = 'Nothing explained yet.'
+    empty.textContent = t('historyEmpty')
     container.appendChild(empty)
     return
   }
