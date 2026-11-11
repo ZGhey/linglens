@@ -4,7 +4,8 @@
 // free-text id (vendors rename ids often); the `custom` provider additionally
 // exposes a user-editable base URL.
 
-import { loadSettings, saveSettings, LANGUAGE_PRESETS, type Settings } from '@/settings'
+import { activeConfig, loadSettings, saveSettings, LANGUAGE_PRESETS, type Settings } from '@/settings'
+import { AI_STUDIO_KEY_URL, checkGeminiKey } from '@/onboarding/gemini'
 import { PROVIDERS, PROVIDER_MAP } from '@/providers'
 import type { ProviderId } from '@/providers/types'
 import { clampHistoryLimit, trimHistory } from '@/history'
@@ -34,6 +35,15 @@ const historyPanelEl = $<HTMLDivElement>('tab-history')
 const settingsTabEl = $<HTMLButtonElement>('tab-btn-settings')
 const historyTabEl = $<HTMLButtonElement>('tab-btn-history')
 const historyLimitEl = $<HTMLInputElement>('historyLimit')
+const tabsEl = document.querySelector<HTMLDivElement>('.tabs')!
+const setupCtaEl = $<HTMLDivElement>('setupCta')
+const openSetupEl = $<HTMLButtonElement>('openSetup')
+const onboardingEl = $<HTMLElement>('onboarding')
+const openAiStudioEl = $<HTMLButtonElement>('openAiStudio')
+const geminiKeyEl = $<HTMLInputElement>('geminiKey')
+const geminiStatusEl = $<HTMLParagraphElement>('geminiStatus')
+const showManualEl = $<HTMLButtonElement>('showManual')
+const manualCardEl = showManualEl.closest<HTMLElement>('.card')!
 
 let refreshHistory: () => void = () => {}
 
@@ -195,6 +205,110 @@ async function init(): Promise<void> {
 
   historyLimitEl.value = String(settings.historyLimit)
   refreshHistory = mountHistory(historyEl, clearHistoryEl)
+
+  wireOnboarding()
+  renderSetupState()
+}
+
+/** True when this page is showing as the toolbar popup (not a tab). */
+function inPopup(): boolean {
+  try {
+    return chrome.extension.getViews({ type: 'popup' }).includes(window)
+  } catch {
+    return false
+  }
+}
+
+function isConfigured(s: Settings): boolean {
+  return activeConfig(s).apiKey.trim() !== ''
+}
+
+/** Show the main settings UI (tabs + panels) or hide it behind onboarding. */
+function setMainVisible(visible: boolean): void {
+  tabsEl.hidden = !visible
+  if (!visible) {
+    settingsPanelEl.hidden = true
+    historyPanelEl.hidden = true
+  } else if (settingsPanelEl.hidden && historyPanelEl.hidden) {
+    showTab('settings')
+  }
+}
+
+/** First run: in a tab, lead with the guided free key; in the toolbar popup,
+ *  offer to open that tab (the popup closes when focus moves to Google). */
+function renderSetupState(): void {
+  if (isConfigured(settings)) {
+    setupCtaEl.hidden = true
+    onboardingEl.hidden = true
+    setMainVisible(true)
+    return
+  }
+  if (inPopup()) {
+    setupCtaEl.hidden = false
+    onboardingEl.hidden = true
+    setMainVisible(true)
+    return
+  }
+  setupCtaEl.hidden = true
+  onboardingEl.hidden = false
+  setMainVisible(false)
+}
+
+function setGeminiStatus(text: string, tone: 'ok' | 'err' | '' = ''): void {
+  geminiStatusEl.textContent = text
+  geminiStatusEl.className = `hint ${tone}`.trim()
+}
+
+function wireOnboarding(): void {
+  openSetupEl.addEventListener('click', () => {
+    void chrome.runtime.openOptionsPage()
+    window.close()
+  })
+  openAiStudioEl.addEventListener('click', () => {
+    void chrome.tabs.create({ url: AI_STUDIO_KEY_URL })
+  })
+  showManualEl.addEventListener('click', () => {
+    onboardingEl.hidden = true
+    setMainVisible(true)
+    showTab('settings')
+    providerEl.focus()
+  })
+
+  // Check as soon as a key is pasted (or typed); only the latest check counts.
+  let latest = 0
+  let timer: ReturnType<typeof setTimeout> | undefined
+  geminiKeyEl.addEventListener('input', () => {
+    clearTimeout(timer)
+    const key = geminiKeyEl.value.trim()
+    if (key.length < 10) {
+      setGeminiStatus('')
+      return
+    }
+    timer = setTimeout(() => void connectGemini(key, ++latest), 300)
+  })
+
+  async function connectGemini(key: string, id: number): Promise<void> {
+    setGeminiStatus('Checking your key…')
+    const result = await checkGeminiKey(key)
+    if (id !== latest) return
+    if (!result.ok) {
+      setGeminiStatus(result.message, 'err')
+      return
+    }
+    settings.apiKeys.gemini = key
+    settings.models.gemini = result.model
+    settings.provider = 'gemini'
+    await saveSettings(settings)
+    providerEl.value = 'gemini'
+    showProvider('gemini')
+    setGeminiStatus(
+      result.note ??
+        `Connected (${result.model}). Select a word on any web page or PDF and click the Linglens icon.`,
+      'ok',
+    )
+    manualCardEl.hidden = true
+    setMainVisible(true)
+  }
 }
 
 /** Toggle the two settings tabs. */

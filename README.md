@@ -75,12 +75,15 @@ Then in Chrome: open `chrome://extensions`, enable **Developer mode**, click
 
 ## Quick start
 
-1. Click the pinned Linglens icon to open settings.
-2. Pick a provider and paste your API key (or point the **Custom
-   (OpenAI-compatible)** provider at a local model — no key needed for most
-   local servers, enter any placeholder).
-3. Choose your explanation language.
-4. On any page, select a term → click the icon that appears.
+1. Click the pinned Linglens icon and choose **Set up**.
+2. Easiest: **Free Gemini key** — open Google AI Studio, sign in with your
+   Google account, click **Create API key**, and paste the key back into
+   Linglens. It is checked and saved automatically (no credit card).
+3. Already have a key? Choose **Enter it manually** and pick your provider (or
+   point the **Custom (OpenAI-compatible)** provider at a local model — no key
+   needed for most local servers, enter any placeholder).
+4. Choose your explanation language.
+5. On any page or PDF, select a term → click the icon that appears.
 
 Your key is stored locally and sent only to the provider you chose. See
 [PRIVACY.md](./PRIVACY.md).
