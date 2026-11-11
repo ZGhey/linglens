@@ -9,7 +9,8 @@ export default defineManifest({
   // Kept in step with the Chrome Web Store "Summary" field (max 132 chars).
   description:
     'Select any term on a page; get it explained in your language, grounded in the page — with your own API key. Private.',
-  minimum_chrome_version: '116',
+  // 119: content_scripts.match_origin_as_fallback (about:blank / blob: frames).
+  minimum_chrome_version: '119',
   homepage_url: 'https://github.com/ZGhey/linglens',
   icons: {
     16: 'src/icons/icon-16.png',
@@ -33,7 +34,7 @@ export default defineManifest({
       // cross-origin or about:blank/blob: ones.
       all_frames: true,
       match_about_blank: true,
-      // Chrome 119+; not in CRXJS's manifest typing yet.
+      // Not in CRXJS's manifest typing yet.
       ...({ match_origin_as_fallback: true } as object),
     },
   ],
