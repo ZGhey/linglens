@@ -44,6 +44,7 @@ const en = {
   openRouterKeyRejected: 'OpenRouter rejected this key.',
   assistKeyPage: 'Create a key in your {provider} dashboard, then paste it below — it is checked automatically.',
   getApiKey: 'Get API key',
+  keyUnverified: "Couldn't verify this key (it may be restricted). You can still save it and try an explanation.",
   keyRejected: '{provider} rejected this key. Copy it again from the dashboard.',
 
   // Settings page — form
@@ -192,6 +193,7 @@ const zh: Record<MessageKey, string> = {
   openRouterKeyRejected: 'OpenRouter 拒绝了这个 key。',
   assistKeyPage: '在 {provider} 后台创建一个 key，然后粘贴到下面，会自动校验。',
   getApiKey: '获取 API key',
+  keyUnverified: '无法校验这个 key（可能是受限 key）。仍可保存后试一次解释。',
   keyRejected: '{provider} 拒绝了这个 key，请从后台重新复制。',
 
   tabSettings: '设置',

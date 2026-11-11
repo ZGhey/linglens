@@ -15,6 +15,7 @@ describe('checkKeyByModels', () => {
 
   it('maps rejected, throttled and unreachable', async () => {
     expect(await checkKeyByModels('openai', 'k', respond(401, {}))).toMatchObject({ ok: false, reason: 'invalid' })
+    expect(await checkKeyByModels('openai', 'k', respond(403, {}))).toMatchObject({ ok: false, reason: 'unverified' })
     expect(await checkKeyByModels('deepseek', 'k', respond(429, {}))).toMatchObject({ ok: false, reason: 'rate-limited' })
     const down = vi.fn(async () => {
       throw new TypeError('fail')

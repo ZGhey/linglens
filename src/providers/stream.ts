@@ -24,6 +24,8 @@ export interface StreamSpec {
   extractUsage?: (data: unknown) => TokenUsage | undefined
   /** Optional provider-specific status->error mapping (defaults to errorFromStatus). */
   mapError?: (status: number, body: string) => ProviderError
+  /** The same request without optional tuning fields, retried once on HTTP 400. */
+  buildFallbackRequest?: (config: ProviderConfig) => { url: string; init: RequestInit }
 }
 
 export async function streamProvider(
@@ -31,7 +33,7 @@ export async function streamProvider(
   spec: StreamSpec,
   onDelta: (delta: string) => void,
 ): Promise<ExplainResult> {
-  const res = await sendProviderRequest(config, spec.buildRequest, spec.mapError)
+  const res = await sendProviderRequest(config, spec.buildRequest, spec.mapError, spec.buildFallbackRequest)
 
   const contentType = res.headers.get('content-type') ?? ''
   if (!contentType.includes('text/event-stream') || !res.body) {

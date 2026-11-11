@@ -134,7 +134,13 @@ export function anthropicTuning(model: string): Record<string, unknown> {
 // --- Request builders, shared by the buffered + streaming variants of each wire.
 // `stream` toggles the provider's streaming mode (SSE); everything else is equal.
 
-function openaiRequest(baseUrl: string, payload: PromptPayload, c: ProviderConfig, stream: boolean) {
+function openaiRequest(
+  baseUrl: string,
+  payload: PromptPayload,
+  c: ProviderConfig,
+  stream: boolean,
+  tuned = true,
+) {
   return {
     url: `${baseUrl}/chat/completions`,
     init: {
@@ -142,7 +148,7 @@ function openaiRequest(baseUrl: string, payload: PromptPayload, c: ProviderConfi
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.apiKey}` },
       body: JSON.stringify({
         model: c.model,
-        ...openaiTuning(c.model),
+        ...(tuned ? openaiTuning(c.model) : {}),
         stream,
         // Ask for usage on the final stream chunk (OpenAI needs the opt-in;
         // compatible servers either honor or ignore it).
@@ -153,7 +159,13 @@ function openaiRequest(baseUrl: string, payload: PromptPayload, c: ProviderConfi
   }
 }
 
-function anthropicRequest(baseUrl: string, payload: PromptPayload, c: ProviderConfig, stream: boolean) {
+function anthropicRequest(
+  baseUrl: string,
+  payload: PromptPayload,
+  c: ProviderConfig,
+  stream: boolean,
+  tuned = true,
+) {
   return {
     url: `${baseUrl}/v1/messages`,
     init: {
@@ -169,7 +181,7 @@ function anthropicRequest(baseUrl: string, payload: PromptPayload, c: ProviderCo
         model: c.model,
         // Room for adaptive thinking on current models (it counts toward max_tokens).
         max_tokens: 2048,
-        ...anthropicTuning(c.model),
+        ...(tuned ? anthropicTuning(c.model) : {}),
         stream,
         system: SYSTEM_PROMPT,
         messages: buildMessages(payload),
@@ -178,7 +190,13 @@ function anthropicRequest(baseUrl: string, payload: PromptPayload, c: ProviderCo
   }
 }
 
-function geminiRequest(baseUrl: string, payload: PromptPayload, c: ProviderConfig, stream: boolean) {
+function geminiRequest(
+  baseUrl: string,
+  payload: PromptPayload,
+  c: ProviderConfig,
+  stream: boolean,
+  tuned = true,
+) {
   const method = stream ? 'streamGenerateContent' : 'generateContent'
   const query = stream ? '&alt=sse' : ''
   return {
@@ -193,7 +211,7 @@ function geminiRequest(baseUrl: string, payload: PromptPayload, c: ProviderConfi
           role: m.role === 'assistant' ? 'model' : 'user',
           parts: [{ text: m.content }],
         })),
-        generationConfig: geminiGenerationConfig(c.model),
+        ...(tuned ? { generationConfig: geminiGenerationConfig(c.model) } : {}),
       }),
     },
   }
@@ -218,7 +236,14 @@ export function geminiGenerationConfig(model: string): Record<string, unknown> {
 // and streaming (STREAM_WIRES) views are derived from it, so adding a wire is
 // one entry here rather than parallel edits to two maps.
 interface WireDef {
-  request: (baseUrl: string, payload: PromptPayload, c: ProviderConfig, stream: boolean) => {
+  /** `tuned: false` builds the plain request (no optional tuning fields). */
+  request: (
+    baseUrl: string,
+    payload: PromptPayload,
+    c: ProviderConfig,
+    stream: boolean,
+    tuned?: boolean,
+  ) => {
     url: string
     init: RequestInit
   }
@@ -272,6 +297,7 @@ function deriveWires<T>(make: (def: WireDef) => T): Record<Wire, T> {
 export const WIRES: Record<Wire, WireBuilder> = deriveWires(
   (def) => (baseUrl, payload) => ({
     buildRequest: (c) => def.request(baseUrl, payload, c, false),
+    buildFallbackRequest: (c) => def.request(baseUrl, payload, c, false, false),
     extractText: def.extractText,
     extractUsage: def.bufferedUsage,
     mapError: def.mapError,
@@ -281,6 +307,7 @@ export const WIRES: Record<Wire, WireBuilder> = deriveWires(
 export const STREAM_WIRES: Record<Wire, StreamWireBuilder> = deriveWires(
   (def) => (baseUrl, payload) => ({
     buildRequest: (c) => def.request(baseUrl, payload, c, true),
+    buildFallbackRequest: (c) => def.request(baseUrl, payload, c, true, false),
     parseEvent: def.parseEvent,
     parseUsage: def.streamUsage,
     // Used only when the endpoint ignores stream:true and returns a normal body.

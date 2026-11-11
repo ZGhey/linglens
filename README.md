@@ -53,6 +53,10 @@ different on three axes:
   explain text just like on a web page — grounded in the whole PDF, including
   Chinese/Japanese/Korean documents. Switch back to Chrome's viewer per PDF or
   turn the reader off in settings.
+- Works in Gmail's PDF attachment previews and inside embedded frames.
+- Guided setup: a free Gemini key in ~30 seconds, one-click OpenRouter, or any
+  provider's key — checked automatically when you paste it.
+- English and Chinese interface, following your browser's language.
 - Configure provider, model, key, language, and length from a toolbar popup.
 
 ## Install
