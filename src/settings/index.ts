@@ -2,6 +2,7 @@
 // key never leaves the browser except in a request to the chosen provider.
 
 import { PROVIDERS, PROVIDER_MAP } from '@/providers'
+import { RETIRED_MODELS } from '@/providers/registry'
 import type { ProviderId } from '@/providers/types'
 import type { Verbosity } from '@/pipeline/types'
 import { DEFAULT_HISTORY_LIMIT, clampHistoryLimit } from '@/history'
@@ -60,6 +61,16 @@ export const DEFAULT_SETTINGS: Settings = {
 
 const STORAGE_KEY = 'linglens.settings'
 
+/** Replace model ids the vendor has shut down with their successor preset. */
+function upgradeRetiredModels(models: Record<ProviderId, string>): Record<ProviderId, string> {
+  const out = { ...models }
+  for (const [provider, retired] of Object.entries(RETIRED_MODELS) as [ProviderId, Record<string, string>][]) {
+    const next = retired[out[provider]]
+    if (next) out[provider] = next
+  }
+  return out
+}
+
 /** Merge stored settings over defaults so new fields always have a value. */
 export function mergeSettings(stored: Partial<Settings> | undefined): Settings {
   return {
@@ -68,7 +79,7 @@ export function mergeSettings(stored: Partial<Settings> | undefined): Settings {
     // Model is free-text per provider, so a stored id is kept verbatim (even one
     // that is not a current preset) — the settings UI shows it in an editable
     // field rather than silently snapping it to a preset.
-    models: { ...DEFAULT_SETTINGS.models, ...stored?.models },
+    models: upgradeRetiredModels({ ...DEFAULT_SETTINGS.models, ...stored?.models }),
     targetLang: stored?.targetLang ?? DEFAULT_SETTINGS.targetLang,
     customBaseUrl: stored?.customBaseUrl ?? DEFAULT_SETTINGS.customBaseUrl,
     verbosity: stored?.verbosity ?? DEFAULT_SETTINGS.verbosity,

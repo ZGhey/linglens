@@ -1,3 +1,4 @@
+import { geminiGenerationConfig } from '@/providers/wire'
 import { describe, it, expect, vi } from 'vitest'
 import { geminiProvider } from '@/providers/gemini'
 import { anthropicProvider } from '@/providers/anthropic'
@@ -95,5 +96,20 @@ describe('anthropicProvider', () => {
     await expect(
       anthropicProvider.explain(payload, { apiKey: 'sk', model: 'm', fetchImpl }),
     ).rejects.toMatchObject({ kind: 'network' })
+  })
+})
+
+describe('geminiGenerationConfig', () => {
+  it('asks non-Lite Gemini 3+ models for low thinking and drops temperature', () => {
+    expect(geminiGenerationConfig('gemini-3.6-flash')).toEqual({ thinkingConfig: { thinkingLevel: 'low' } })
+    expect(geminiGenerationConfig('gemini-3.8-flash')).toEqual({ thinkingConfig: { thinkingLevel: 'low' } })
+  })
+  it('leaves Lite models at their minimal default', () => {
+    expect(geminiGenerationConfig('gemini-3.1-flash-lite')).toEqual({})
+    expect(geminiGenerationConfig('gemini-3.5-flash-lite')).toEqual({})
+  })
+  it('keeps temperature for older or unknown models', () => {
+    expect(geminiGenerationConfig('gemini-2.5-flash')).toEqual({ temperature: 0.2 })
+    expect(geminiGenerationConfig('my-tuned-model')).toEqual({ temperature: 0.2 })
   })
 })
