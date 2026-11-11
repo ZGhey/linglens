@@ -31,6 +31,12 @@ const viewerLib = await import('pdfjs-dist/legacy/web/pdf_viewer.mjs')
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
 
 localizeDom()
+// Keep the document language neutral, not the UI language: pdf.js lays out its
+// invisible text layer in the generic `sans-serif`/`serif` family, which the
+// browser resolves per language. Under lang=zh-CN that becomes a CJK font whose
+// Latin glyph widths differ from the PDF's, so selections drift off the visible
+// words (drag "dropout", get "opout ran"). The visible UI text is unaffected.
+document.documentElement.lang = 'en'
 document.title = t('readerTitle')
 
 /** Runtime assets copied into dist/pdfjs/ by the build (see vite.config.ts). */

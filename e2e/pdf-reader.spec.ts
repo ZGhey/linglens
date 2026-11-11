@@ -287,3 +287,25 @@ test('“Chrome viewer” leaves the reader and stays out for that PDF', async (
   await page.waitForTimeout(2000)
   expect(page.url()).toBe('https://example.test/paper.pdf')
 })
+
+test('on a Chinese browser the reader keeps a neutral document language (text-layer metrics)', async () => {
+  // A zh-CN document language makes the browser resolve the text layer's
+  // generic sans-serif to a CJK font, so selections drift off the visible words.
+  const context = await chromium.launchPersistentContext('', {
+    headless: false,
+    locale: 'zh-CN',
+    args: ['--headless=new', `--disable-extensions-except=${distPath}`, `--load-extension=${distPath}`],
+  })
+  try {
+    await context.route('https://example.test/paper.pdf', (route) =>
+      route.fulfill({ status: 200, headers: { 'content-type': 'application/pdf' }, body: paperPdf }),
+    )
+    const page = await context.newPage()
+    await page.goto('https://example.test/paper.pdf')
+    await page.waitForURL(/src\/reader\/index\.html/, { timeout: 15_000 })
+    await expect(page.locator('#download')).toHaveText('下载') // UI is still Chinese
+    expect(await page.evaluate(() => document.documentElement.lang)).toBe('en')
+  } finally {
+    await context.close()
+  }
+})
