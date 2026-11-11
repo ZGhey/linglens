@@ -5,7 +5,7 @@ import { defineManifest } from '@crxjs/vite-plugin'
 export default defineManifest({
   manifest_version: 3,
   name: 'Linglens',
-  version: '0.2.0',
+  version: '0.2.1',
   // Localized in public/_locales (en, zh_CN); the English text is kept in step
   // with the Chrome Web Store "Summary" field (max 132 chars).
   default_locale: 'en',
