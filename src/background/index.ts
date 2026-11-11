@@ -143,9 +143,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       chrome.runtime.openOptionsPage()
       return false
     case 'OPEN_PDF_READER': {
+      // Act only on the sending tab's own top-level document, and take its URL
+      // from the sender (set by Chrome), never from the message body — so a
+      // content script can't make the worker probe or open arbitrary URLs with
+      // the user's cookies.
       const tabId = sender.tab?.id
-      if (tabId === undefined) return false
-      openPdfReader(tabId, messageUrl(message))
+      const url = sender.url
+      if (tabId === undefined || sender.frameId !== 0 || !url) return false
+      openPdfReader(tabId, url)
         .then(sendResponse)
         .catch(() => sendResponse({ redirected: false } satisfies OpenPdfReaderResponse))
       return true // async response
