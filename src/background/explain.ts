@@ -16,6 +16,7 @@ import {
 } from '@/providers/types'
 import { activeConfig, type Settings } from '@/settings'
 import type { ExplainRequest, ExplainResponse } from '@/messaging/types'
+import { t } from '@/i18n'
 
 export interface ExplainDeps {
   getSettings: () => Promise<Settings>
@@ -67,7 +68,7 @@ export function createExplainService(deps: ExplainDeps): ExplainService {
   ): Promise<ExplainResponse> {
     const term = req.term.trim()
     if (!term) {
-      return { ok: false, error: { kind: 'no-selection', message: 'Select a term to explain.' } }
+      return { ok: false, error: { kind: 'no-selection', message: t('errNoSelection') } }
     }
 
     const settings = await deps.getSettings()
@@ -75,7 +76,7 @@ export function createExplainService(deps: ExplainDeps): ExplainService {
     if (!cfg.apiKey.trim()) {
       return {
         ok: false,
-        error: { kind: 'missing-key', message: 'No API key set. Open Linglens settings to add one.' },
+        error: { kind: 'missing-key', message: t('errMissingKey') },
       }
     }
 
@@ -125,7 +126,7 @@ export function createExplainService(deps: ExplainDeps): ExplainService {
       if (err instanceof ProviderError) {
         return { ok: false, error: { kind: err.kind, message: err.message } }
       }
-      return { ok: false, error: { kind: 'unknown', message: 'Something went wrong. Try again.' } }
+      return { ok: false, error: { kind: 'unknown', message: t('errUnknown') } }
     }
   }
 

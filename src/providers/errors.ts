@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import { ProviderError } from './types'
 
 // Shared HTTP-status -> typed-error mapping, so every adapter surfaces the same
@@ -10,5 +11,5 @@ export function errorFromStatus(status: number): ProviderError {
   if (status === 429) {
     return new ProviderError('rate-limited', 'Rate limited by the provider. Wait a moment and try again.')
   }
-  return new ProviderError('unknown', `Provider returned an unexpected error (HTTP ${status}).`)
+  return new ProviderError('unknown', t('errHttp', { status }))
 }

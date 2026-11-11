@@ -6,6 +6,7 @@
 // this and explain directly, since those are already explicit.
 
 import { ShadowHost } from './shadow-host'
+import { t } from '@/i18n'
 
 const HOST_ID = 'linglens-trigger-host'
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -65,7 +66,7 @@ export class TriggerIcon extends ShadowHost {
     super(HOST_ID, STYLES)
     this.button = document.createElement('button')
     this.button.className = 'cl-trigger'
-    this.button.title = 'Explain with Linglens'
+    this.button.title = t('explainWithLinglens')
     this.button.appendChild(lensGlyph())
     // Stop the click from bubbling to the page (and to our own outside-dismiss
     // handlers) before firing the explanation.

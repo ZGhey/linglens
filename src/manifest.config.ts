@@ -6,9 +6,10 @@ export default defineManifest({
   manifest_version: 3,
   name: 'Linglens',
   version: '0.1.1',
-  // Kept in step with the Chrome Web Store "Summary" field (max 132 chars).
-  description:
-    'Select any term on a page; get it explained in your language, grounded in the page — with your own API key. Private.',
+  // Localized in public/_locales (en, zh_CN); the English text is kept in step
+  // with the Chrome Web Store "Summary" field (max 132 chars).
+  default_locale: 'en',
+  description: '__MSG_extDescription__',
   // 119: content_scripts.match_origin_as_fallback (about:blank / blob: frames).
   minimum_chrome_version: '119',
   homepage_url: 'https://github.com/ZGhey/linglens',
@@ -59,7 +60,7 @@ export default defineManifest({
         default: 'Ctrl+Shift+E',
         mac: 'Command+Shift+E',
       },
-      description: 'Explain the current selection with Linglens',
+      description: '__MSG_cmdExplainSelection__',
     },
   },
 })

@@ -22,12 +22,16 @@ import {
   type PdfTextItem,
 } from '@/pdf/structure'
 import { startSelectionUi } from '@/content/selection-ui'
+import { localizeDom, t } from '@/i18n'
 
 // pdf_viewer.mjs reads `globalThis.pdfjsLib` when it is evaluated, so it is
 // imported only after the core library above has loaded.
 const viewerLib = await import('pdfjs-dist/legacy/web/pdf_viewer.mjs')
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
+
+localizeDom()
+document.title = t('readerTitle')
 
 /** Runtime assets copied into dist/pdfjs/ by the build (see vite.config.ts). */
 const asset = (dir: string) => chrome.runtime.getURL(`pdfjs/${dir}/`)
@@ -70,7 +74,7 @@ function setStatus(text: string): void {
 }
 
 if (!pdfUrl) {
-  setStatus('No PDF to show. Open a PDF link and Linglens will display it here.')
+  setStatus(t('readerNoFile'))
 } else {
   void start(pdfUrl)
 }
@@ -80,7 +84,7 @@ async function start(url: string): Promise<void> {
   document.title = fileName
   titleEl.textContent = fileName
   titleEl.title = url
-  setStatus('Loading PDF…')
+  setStatus(t('readerLoading'))
   // Wired before loading so a slow or stuck load can still be escaped.
   $('openNative').addEventListener('click', () => void openInChromeViewer(url))
 
@@ -114,7 +118,7 @@ async function start(url: string): Promise<void> {
   })
   loadingTask.onPassword = (update: (password: string) => void, reason: number) => {
     const retry = reason === pdfjsLib.PasswordResponses.INCORRECT_PASSWORD
-    const password = window.prompt(retry ? 'Wrong password. Try again:' : 'This PDF is protected. Password:')
+    const password = window.prompt(retry ? t('readerWrongPassword') : t('readerPassword'))
     if (password === null) void openInChromeViewer(url)
     else update(password)
   }
@@ -127,7 +131,7 @@ async function start(url: string): Promise<void> {
     // POST results, blocked cookies). Never strand the user: go back to
     // Chrome's viewer automatically.
     console.warn('[Linglens] reader could not load the PDF; using Chrome viewer', err)
-    setStatus('Opening in Chrome’s viewer…')
+    setStatus(t('readerFallingBack'))
     await openInChromeViewer(url)
     return
   }
@@ -336,12 +340,12 @@ function wireToolbar(
       findStatusEl.textContent = matchesCount.total
         ? `${matchesCount.current} / ${matchesCount.total}`
         : findInputEl.value
-          ? 'No matches'
+          ? t('noMatches')
           : ''
     },
   )
   eventBus.on('updatefindcontrolstate', ({ state }: { state: number }) => {
-    if (state === viewerLib.FindState.NOT_FOUND) findStatusEl.textContent = 'No matches'
+    if (state === viewerLib.FindState.NOT_FOUND) findStatusEl.textContent = t('noMatches')
   })
 
   document.addEventListener('keydown', (e) => {

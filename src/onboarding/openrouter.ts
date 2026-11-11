@@ -9,6 +9,8 @@
 // permission is needed. The code is useless without the verifier, which never
 // leaves the extension.
 
+import { t } from '@/i18n'
+
 export const OPENROUTER_AUTH_URL = 'https://openrouter.ai/auth'
 export const OPENROUTER_EXCHANGE_URL = 'https://openrouter.ai/api/v1/auth/keys'
 export const OPENROUTER_KEY_INFO_URL = 'https://openrouter.ai/api/v1/key'
@@ -124,17 +126,17 @@ export async function exchangeCode(
       body: JSON.stringify({ code, code_verifier: verifier, code_challenge_method: 'S256' }),
     })
   } catch {
-    throw new OpenRouterAuthError("Couldn't reach OpenRouter. Check your connection and try again.")
+    throw new OpenRouterAuthError(t('openRouterUnreachable'))
   }
   if (res.status === 403) {
-    throw new OpenRouterAuthError('OpenRouter rejected the sign-in (it may have expired). Try connecting again.')
+    throw new OpenRouterAuthError(t('openRouterExpired'))
   }
   if (!res.ok) {
-    throw new OpenRouterAuthError(`OpenRouter returned an error (HTTP ${res.status}). Try again.`)
+    throw new OpenRouterAuthError(t('openRouterHttpError', { status: res.status }))
   }
   const body = (await res.json().catch(() => null)) as { key?: unknown } | null
   if (typeof body?.key !== 'string' || !body.key) {
-    throw new OpenRouterAuthError('OpenRouter did not return a key. Try connecting again.')
+    throw new OpenRouterAuthError(t('openRouterNoKey'))
   }
   return body.key
 }

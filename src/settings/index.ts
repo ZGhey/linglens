@@ -6,6 +6,7 @@ import { RETIRED_MODELS } from '@/providers/registry'
 import type { ProviderId } from '@/providers/types'
 import type { Verbosity } from '@/pipeline/types'
 import { DEFAULT_HISTORY_LIMIT, clampHistoryLimit } from '@/history'
+import { uiLocale } from '@/i18n'
 
 export { addUsage } from './usage'
 
@@ -52,7 +53,8 @@ export const DEFAULT_SETTINGS: Settings = {
   models: Object.fromEntries(
     PROVIDERS.map((p) => [p.id, p.models[0] ?? '']),
   ) as Record<ProviderId, string>,
-  targetLang: 'English',
+  // Explanations default to the browser's language (Chinese browsers: 中文).
+  targetLang: uiLocale() === 'zh' ? '中文' : 'English',
   customBaseUrl: '',
   verbosity: 'concise',
   historyLimit: DEFAULT_HISTORY_LIMIT,

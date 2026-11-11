@@ -3,6 +3,7 @@
 // The check lists the key's models — free, and it proves the key works.
 
 import { PROVIDER_MAP } from '@/providers/registry'
+import { t } from '@/i18n'
 
 /** Where the user creates a key (Google sign-in, no card needed). */
 export const AI_STUDIO_KEY_URL = 'https://aistudio.google.com/apikey'
@@ -66,7 +67,7 @@ export async function checkGeminiKey(
     return {
       ok: false,
       reason: 'network',
-      message: "Couldn't reach Google. Check your internet connection and paste the key again.",
+      message: t('geminiNetwork'),
     }
   }
 
@@ -92,15 +93,14 @@ export async function checkGeminiKey(
     return {
       ok: true,
       model: presets[0] ?? '',
-      note: 'Key saved. Google is rate-limiting it right now — if an explanation fails, wait a minute and try again.',
+      note: t('geminiRateLimitedNote'),
     }
   }
   if (/location is not supported/i.test(message)) {
     return {
       ok: false,
       reason: 'region',
-      message:
-        "Google doesn't offer the Gemini API in your region. Use OpenRouter or another provider with your own key instead.",
+      message: t('geminiRegion'),
     }
   }
   const keyRejected =
@@ -113,15 +113,15 @@ export async function checkGeminiKey(
       reason: 'invalid',
       message:
         res.status === 403 && message
-          ? `Google rejected this key: ${message}`
-          : "That doesn't look like a working Gemini key. Copy it again from AI Studio (it starts with “AIza”).",
+          ? t('geminiRejectedWithReason', { reason: message })
+          : t('geminiInvalid'),
     }
   }
   return {
     ok: false,
     reason: 'unknown',
     message: message
-      ? `Google returned an error: ${message}`
-      : `Google returned an unexpected error (HTTP ${res.status}). Try again in a moment.`,
+      ? t('geminiErrorWithReason', { reason: message })
+      : t('geminiErrorStatus', { status: res.status }),
   }
 }

@@ -3,6 +3,7 @@
 
 import { blockContextHint, startSelectionUi } from './selection-ui'
 import { showPdfNotice } from './pdf-notice'
+import { t } from '@/i18n'
 import { GMAIL_ORIGIN, startGmailPreviewSelection } from './sites/gmail'
 import type { OpenPdfReaderRequest, OpenPdfReaderResponse } from '@/messaging/types'
 
@@ -18,8 +19,6 @@ const isTopFrame = window === window.top
 
 const PDF_HINT_SEEN_KEY = 'linglens.pdfHintSeen'
 
-const PDF_VIEWER_NOTICE =
-  "Linglens can't read text in Chrome's PDF viewer. Turn on the Linglens PDF reader in settings to explain PDF text."
 
 /** Back/forward onto a PDF the reader already took over: going through the
  *  redirect again would trap the Back button, so stay in Chrome's viewer. */
@@ -50,7 +49,7 @@ function maybeNotifyPdfOnce(): void {
   void chrome.storage.local.get(PDF_HINT_SEEN_KEY).then((stored) => {
     if (stored[PDF_HINT_SEEN_KEY]) return
     void chrome.storage.local.set({ [PDF_HINT_SEEN_KEY]: true })
-    showPdfNotice(PDF_VIEWER_NOTICE)
+    showPdfNotice(t('pdfViewerNotice'))
   })
 }
 
@@ -65,7 +64,7 @@ const ui = startSelectionUi({
   // An explicit trigger with no reachable selection on a PDF: say why rather
   // than do nothing.
   onEmptyTrigger: () => {
-    if (isTopFrame && isPdfView()) showPdfNotice(PDF_VIEWER_NOTICE)
+    if (isTopFrame && isPdfView()) showPdfNotice(t('pdfViewerNotice'))
   },
 })
 

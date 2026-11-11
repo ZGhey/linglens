@@ -5,6 +5,7 @@ import type { ErrorKind, ExplainError } from '@/messaging/types'
 import type { FollowUpTurn, Verbosity } from '@/pipeline/types'
 import type { TokenUsage } from '@/providers/types'
 import { ShadowHost } from './shadow-host'
+import { t, type MessageKey } from '@/i18n'
 
 /** Optional extras for the finished-explanation card. */
 export interface ExplanationOptions {
@@ -24,13 +25,13 @@ const HOST_ID = 'linglens-popup-host'
 
 // Distinct, actionable copy per error kind. Keeps the popup from ever showing a
 // stuck spinner or a silent failure (ticket 08).
-const ERROR_COPY: Record<ErrorKind, string> = {
-  'missing-key': 'No API key set. Open settings and add your provider key to get started.',
-  'invalid-key': 'Your API key was rejected. Open settings and check the key for the selected provider.',
-  'rate-limited': 'The provider is rate-limiting you. Wait a few seconds and try again.',
-  'no-selection': 'Select a word or phrase first, then trigger Linglens.',
-  network: 'Could not reach the provider. Check your internet connection and retry.',
-  unknown: 'Something went wrong. Please try again.',
+const ERROR_COPY: Record<ErrorKind, MessageKey> = {
+  'missing-key': 'errMissingKey',
+  'invalid-key': 'errInvalidKey',
+  'rate-limited': 'errRateLimited',
+  'no-selection': 'errNoSelection',
+  network: 'errNetwork',
+  unknown: 'errUnknown',
 }
 
 /** The copy to show for an error. Curated per-kind copy wins for the actionable
@@ -39,7 +40,7 @@ const ERROR_COPY: Record<ErrorKind, string> = {
  * is far more diagnostic than the generic fallback. */
 function errorText(error: ExplainError): string {
   if (error.kind === 'unknown' && error.message.trim()) return error.message
-  return ERROR_COPY[error.kind]
+  return t(ERROR_COPY[error.kind])
 }
 
 /** Key errors are fixable in settings, so we offer a shortcut button for them. */
@@ -218,7 +219,7 @@ export class Popup extends ShadowHost {
     const spinner = document.createElement('span')
     spinner.className = 'cl-spinner'
     const label = document.createElement('span')
-    label.textContent = 'Explaining…'
+    label.textContent = t('explaining')
     loading.append(spinner, label)
     this.card.appendChild(loading)
   }
@@ -268,15 +269,15 @@ export class Popup extends ShadowHost {
     actions.className = 'cl-actions'
     const copy = document.createElement('button')
     copy.className = 'cl-btn'
-    copy.textContent = 'Copy'
+    copy.textContent = t('copy')
     copy.addEventListener('click', () => {
       // Copy the whole thread when there is one, not just the first answer.
       const thread = (opts.thread ?? [])
         .map((t) => `\n\nQ: ${t.question}\nA: ${t.answer}`)
         .join('')
       void navigator.clipboard.writeText(explanation + thread).then(() => {
-        copy.textContent = 'Copied'
-        setTimeout(() => (copy.textContent = 'Copy'), 1200)
+        copy.textContent = t('copied')
+        setTimeout(() => (copy.textContent = t('copy')), 1200)
       })
     })
     actions.appendChild(copy)
@@ -289,7 +290,7 @@ export class Popup extends ShadowHost {
       for (const v of ['concise', 'detailed'] as const) {
         const btn = document.createElement('button')
         btn.className = 'cl-btn'
-        btn.textContent = v === 'concise' ? 'Concise' : 'Detailed'
+        btn.textContent = v === 'concise' ? t('concise') : t('detailed')
         if (v === opts.verbosity) btn.disabled = true
         else btn.addEventListener('click', () => opts.onToggleVerbosity!(v))
         seg.appendChild(btn)
@@ -305,7 +306,10 @@ export class Popup extends ShadowHost {
       const meta = document.createElement('div')
       meta.className = 'cl-usage'
       const fmt = (n: number) => n.toLocaleString('en-US')
-      meta.textContent = `↑ ${fmt(opts.usage.inputTokens)} in · ↓ ${fmt(opts.usage.outputTokens)} out`
+      meta.textContent = t('tokenUsage', {
+        input: fmt(opts.usage.inputTokens),
+        output: fmt(opts.usage.outputTokens),
+      })
       this.card.appendChild(meta)
     }
 
@@ -314,10 +318,10 @@ export class Popup extends ShadowHost {
       const ask = document.createElement('div')
       ask.className = 'cl-ask'
       const input = document.createElement('input')
-      input.placeholder = 'Ask a follow-up…'
+      input.placeholder = t('askFollowUp')
       const send = document.createElement('button')
       send.className = 'cl-btn'
-      send.textContent = 'Ask'
+      send.textContent = t('ask')
       const submit = () => {
         const question = input.value.trim()
         if (!question) return
@@ -373,7 +377,7 @@ export class Popup extends ShadowHost {
       const btn = document.createElement('button')
       btn.className = 'cl-btn'
       btn.style.marginTop = '6px'
-      btn.textContent = 'Open settings'
+      btn.textContent = t('openSettings')
       btn.addEventListener('click', onOpenSettings)
       this.card.appendChild(btn)
     }
@@ -394,7 +398,7 @@ export class Popup extends ShadowHost {
       actions.className = 'cl-actions'
       const btn = document.createElement('button')
       btn.className = 'cl-btn'
-      btn.textContent = 'Open settings'
+      btn.textContent = t('openSettings')
       btn.addEventListener('click', onOpenSettings)
       actions.appendChild(btn)
       this.card.appendChild(actions)

@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import type { PromptPayload } from '@/pipeline/types'
 import {
   ProviderError,
@@ -23,7 +24,7 @@ export function getProvider(id: ProviderId): Provider {
   const provider = REGISTRY[id]
   if (!provider) {
     // Guards against a stale provider id persisted in settings.
-    throw new ProviderError('unknown', `Unknown provider "${id}".`)
+    throw new ProviderError('unknown', t('errUnknownProvider', { id }))
   }
   return provider
 }
