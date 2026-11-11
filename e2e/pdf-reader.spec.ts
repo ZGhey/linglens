@@ -154,13 +154,13 @@ test('Chinese PDF text decodes through the bundled CMaps', async ({ context, ext
   await expect(page.locator('.textLayer')).toContainText('上下文感知', { timeout: 15_000 })
 })
 
-test('a PDF the reader cannot refetch falls back to Chrome’s viewer', async ({
+test('a PDF that cannot be refetched stays in Chrome’s viewer', async ({
   context,
   extensionId,
 }) => {
   await seedSettings(context, extensionId)
-  // First load (the tab) succeeds; every refetch (the reader) is refused, like
-  // a one-time download link.
+  // Like a one-time download link: the tab's load succeeds, every later
+  // request is refused. The worker's pre-check must keep the tab where it is.
   let served = 0
   await context.route('https://example.test/once.pdf', (route) => {
     served++
@@ -169,9 +169,76 @@ test('a PDF the reader cannot refetch falls back to Chrome’s viewer', async ({
       : route.fulfill({ status: 403, body: 'gone' })
   })
   const page = await context.newPage()
+  const visitedReader: string[] = []
+  page.on('framenavigated', (f) => {
+    if (f.url().includes('/src/reader/')) visitedReader.push(f.url())
+  })
   await page.goto('https://example.test/once.pdf')
+  await page.waitForTimeout(2500)
+  expect(visitedReader).toEqual([])
+  expect(page.url()).toBe('https://example.test/once.pdf')
+  expect(await page.evaluate(() => document.contentType)).toBe('application/pdf')
+})
+
+test('a PDF the reader fails to load goes back to Chrome’s viewer', async ({
+  context,
+  extensionId,
+}) => {
+  await seedSettings(context, extensionId)
+  // Tab load and the worker's pre-check succeed; the reader's own load gets a
+  // body pdf.js can't parse. Going back to Chrome's viewer then works.
+  let served = 0
+  await context.route('https://example.test/twice.pdf', (route) => {
+    served++
+    return served === 3
+      ? route.fulfill({ status: 200, headers: { 'content-type': 'application/pdf' }, body: '%PDF-1.4 broken' })
+      : route.fulfill({ status: 200, headers: { 'content-type': 'application/pdf' }, body: paperPdf })
+  })
+  const page = await context.newPage()
+  await page.goto('https://example.test/twice.pdf')
   await page.waitForURL(/src\/reader\/index\.html/, { timeout: 15_000 })
-  await page.waitForURL('https://example.test/once.pdf', { timeout: 15_000 })
+  await page.waitForURL('https://example.test/twice.pdf', { timeout: 15_000 })
+  await page.waitForTimeout(1000)
+  expect(page.url()).toBe('https://example.test/twice.pdf')
+  expect(await page.evaluate(() => document.contentType)).toBe('application/pdf')
+})
+
+test('a phrase selected across a line wrap gets the icon and is explained whole', async ({
+  context,
+  extensionId,
+}) => {
+  await seedSettings(context, extensionId)
+  await servePdf(context, 'https://example.test/paper.pdf', paperPdf)
+  let requestBody = ''
+  await context.route('https://api.openai.com/**', (route) => {
+    requestBody = route.request().postData() ?? ''
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ choices: [{ message: { content: 'MOCKED: wrapped phrase.' } }] }),
+    })
+  })
+  const page = await context.newPage()
+  await page.goto('https://example.test/paper.pdf')
+  await page.waitForURL(/src\/reader\/index\.html/, { timeout: 15_000 })
+  const line1 = page.locator('.textLayer span', { hasText: 'Here dropout randomly' })
+  const line2 = page.locator('.textLayer span', { hasText: 'which forces the network' })
+  await expect(line2).toBeAttached({ timeout: 15_000 })
+
+  // Real mouse drag from "training," at the end of line 1 into line 2.
+  const b1 = (await line1.boundingBox())!
+  const b2 = (await line2.boundingBox())!
+  await page.mouse.move(b1.x + b1.width * 0.78, b1.y + b1.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(b2.x + b2.width * 0.3, b2.y + b2.height / 2, { steps: 8 })
+  await page.mouse.up()
+
+  await page.getByRole('button', { name: 'Explain with Linglens' }).click()
+  await expect(page.getByText('MOCKED: wrapped phrase.')).toBeVisible({ timeout: 15_000 })
+  const prompt = JSON.parse(requestBody).messages[1].content as string
+  const term = prompt.match(/Selected term: "([^"]*)"/)?.[1] ?? ''
+  expect(term).toContain('training, which')
+  expect(term).not.toMatch(/\n/)
 })
 
 test('with the reader turned off, PDFs stay in Chrome’s viewer', async ({

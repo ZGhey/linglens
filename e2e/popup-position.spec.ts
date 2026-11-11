@@ -102,6 +102,15 @@ test('the popup stays inside the viewport when anchored low and grown by follow-
     await input.press('Enter')
     await expect(page.getByText(`follow-up question number ${i}?`)).toBeVisible({ timeout: 10_000 })
   }
+  // Wait for the last answer to land (original + 3 follow-ups), then for the
+  // ResizeObserver-driven re-placement, which runs asynchronously after growth.
+  await expect(page.getByText('MOCKED.')).toHaveCount(4, { timeout: 10_000 })
+  await expect
+    .poll(async () => {
+      const c = await cardRect(page)
+      return c.bottom <= c.viewportH && c.top >= 0
+    }, { timeout: 5_000 })
+    .toBe(true)
 
   const r = await cardRect(page)
   // The user's exact symptom: the card runs off the bottom of the screen.

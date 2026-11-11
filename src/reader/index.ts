@@ -14,6 +14,7 @@ import { fileNameFromUrl, pdfUrlFromReaderSearch } from '@/pdf/routing'
 import {
   buildParagraphs,
   buildPdfHtml,
+  normalizeSelectionText,
   paragraphAt,
   MAX_PAGES,
   type PdfOutlineEntry,
@@ -50,7 +51,12 @@ const pdfUrl = pdfUrlFromReaderSearch(location.search)
 async function openInChromeViewer(url: string): Promise<void> {
   const msg: PdfBypassRequest = { type: 'PDF_BYPASS', url }
   await chrome.runtime.sendMessage(msg).catch(() => {})
-  if (url.startsWith('file:')) {
+  if (history.length > 1) {
+    // The reader replaced Chrome's viewer of this same PDF in this tab, so the
+    // previous entry is that view. Going back restores it without fetching the
+    // PDF again (which may no longer work, e.g. a one-time link).
+    history.back()
+  } else if (url.startsWith('file:')) {
     // An extension page can't navigate itself to file://; the tabs API can.
     const tab = await chrome.tabs.getCurrent()
     if (tab?.id !== undefined) await chrome.tabs.update(tab.id, { url })
@@ -162,6 +168,8 @@ async function start(url: string): Promise<void> {
       return structure.then((s) => paragraphAt(s.paragraphs, located.page, located.point, located.term))
     },
     tabId: tab?.id,
+    scrollContainer: container,
+    normalizeSelection: normalizeSelectionText,
   })
 }
 
@@ -186,7 +194,7 @@ function locateSelection(viewer: InstanceType<typeof viewerLib.PDFViewer>):
     rect.left + rect.width / 2 - pageRect.left,
     rect.top + rect.height / 2 - pageRect.top,
   )
-  return { page: pageNumber - 1, point: { x, y }, term: sel.toString() }
+  return { page: pageNumber - 1, point: { x, y }, term: normalizeSelectionText(sel.toString()) }
 }
 
 interface Structure {
@@ -204,6 +212,9 @@ async function extractStructure(pdf: PDFDocumentProxy): Promise<Structure> {
       const items: PdfTextItem[] = []
       for (const item of content.items) {
         if (!('str' in item)) continue // marked-content markers carry no text
+        // Rotated runs are margin stamps and watermarks (e.g. arXiv's sidebar
+        // id), not body text; they would read as headings or split paragraphs.
+        if (Math.abs(item.transform[1]) > 1e-3 || Math.abs(item.transform[2]) > 1e-3) continue
         items.push({
           str: item.str,
           x: item.transform[4],

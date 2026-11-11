@@ -13,7 +13,7 @@ import {
   type OpenPdfReaderResponse,
   type TriggerSelectionRequest,
 } from '@/messaging/types'
-import { READER_PATH, isReaderLoadable, readerUrlFor } from '@/pdf/routing'
+import { READER_PATH, isReaderLoadable, looksLikePdf, readerUrlFor } from '@/pdf/routing'
 
 const service = createExplainService({
   getSettings: loadSettings,
@@ -61,12 +61,49 @@ async function bypassPdf(url: string): Promise<void> {
   await chrome.storage.session.set({ [PDF_BYPASS_KEY]: list.slice(-MAX_BYPASSED) })
 }
 
+/** Whether the reader will be able to load this URL again. Leaving Chrome's
+ *  viewer for a PDF that can't be refetched (one-time download links, POST
+ *  results, expired signed URLs) would lose it, so check first: a credentialed
+ *  GET whose first bytes are a PDF. Only the head is read; the body is dropped.
+ *  file:// can't be fetched from the worker — the reader loads it via XHR. */
+async function refetchesAsPdf(url: string): Promise<boolean> {
+  if (url.startsWith('file:')) return true
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 8000)
+  try {
+    const res = await fetch(url, { credentials: 'include', signal: controller.signal })
+    if (!res.ok || !res.body) return false
+    const reader = res.body.getReader()
+    const chunks: Uint8Array[] = []
+    let size = 0
+    while (size < 1024) {
+      const { done, value } = await reader.read()
+      if (done) break
+      chunks.push(value)
+      size += value.length
+    }
+    void reader.cancel().catch(() => {})
+    const head = new Uint8Array(size)
+    let offset = 0
+    for (const c of chunks) {
+      head.set(c, offset)
+      offset += c.length
+    }
+    return looksLikePdf(head)
+  } catch {
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 /** Send a tab showing a PDF in Chrome's viewer to the Linglens reader, unless
- *  the reader is off, the URL can't be refetched, or the user bypassed it. */
+ *  the reader is off, the user bypassed it, or the PDF can't be refetched. */
 async function openPdfReader(tabId: number, url: string): Promise<OpenPdfReaderResponse> {
   const settings = await loadSettings()
   if (!settings.pdfReader || !isReaderLoadable(url)) return { redirected: false }
   if ((await bypassedPdfs()).includes(url)) return { redirected: false }
+  if (!(await refetchesAsPdf(url))) return { redirected: false }
   await chrome.tabs.update(tabId, {
     url: readerUrlFor(chrome.runtime.getURL(READER_PATH), url),
   })
