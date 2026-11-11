@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   fileNameFromUrl,
   isReaderLoadable,
+  looksLikePdf,
   pdfUrlFromReaderSearch,
   readerUrlFor,
 } from '@/pdf/routing'
@@ -30,5 +31,17 @@ describe('PDF reader routing', () => {
   it('derives a readable file name', () => {
     expect(fileNameFromUrl('https://a.test/dir/My%20Doc.pdf')).toBe('My Doc.pdf')
     expect(fileNameFromUrl('https://a.test/')).toBe('https://a.test/')
+  })
+})
+
+describe('looksLikePdf', () => {
+  const bytes = (s: string) => new TextEncoder().encode(s)
+  it('detects the PDF header, including after leading junk', () => {
+    expect(looksLikePdf(bytes('%PDF-1.7\n...'))).toBe(true)
+    expect(looksLikePdf(bytes('\n\n  %PDF-1.4'))).toBe(true)
+  })
+  it('rejects HTML error pages and empty bodies', () => {
+    expect(looksLikePdf(bytes('<!doctype html><title>403</title>'))).toBe(false)
+    expect(looksLikePdf(new Uint8Array())).toBe(false)
   })
 })

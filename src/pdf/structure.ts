@@ -92,6 +92,16 @@ function normalizeText(s: string): string {
     .replace(/\s+/g, ' ')
 }
 
+/** A selection made across wrapped lines of the PDF text layer, read back as
+ *  the phrase it is: line breaks become spaces (or nothing, between CJK
+ *  characters and after a line-end hyphen), runs of whitespace collapse. */
+export function normalizeSelectionText(raw: string): string {
+  const lines = raw.split(/\r?\n/).map((l) => normalizeText(l).trim()).filter(Boolean)
+  let out = ''
+  for (const line of lines) out = joinLines(out, line)
+  return out
+}
+
 /** Group a page's items into visual lines, in content order. */
 export function groupLines(items: readonly PdfTextItem[]): Line[] {
   const lines: Line[] = []
@@ -109,7 +119,13 @@ export function groupLines(items: readonly PdfTextItem[]): Line[] {
   for (const item of items) {
     const str = normalizeText(item.str)
     const h = Math.abs(item.height) || 1
-    if (current && Math.abs(item.y - current.y) > h * 0.5) flush()
+    if (current) {
+      const dy = Math.abs(item.y - current.y)
+      // A run continuing rightwards slightly off the baseline is a sub- or
+      // superscript (inline math, footnote marks), not a new line.
+      const continues = item.x >= current.right - h && dy < Math.max(h, current.height) * 0.9
+      if (dy > h * 0.5 && !continues) flush()
+    }
     if (str.trim()) {
       if (!current) {
         current = { text: str, y: item.y, height: h, left: item.x, right: item.x + item.width }
@@ -159,10 +175,45 @@ function splitLong(text: string): string[] {
   return out
 }
 
+/** Text length of a line group as it will be joined (close enough for capping). */
+function groupLength(group: readonly Line[]): number {
+  return group.reduce((n, l) => n + l.text.length + 1, 0)
+}
+
 /**
- * Turn one page's lines into paragraphs. A new paragraph starts at a vertical
- * gap clearly larger than the line spacing, or where the font size changes
- * (heading ↔ body). Paragraphs over the cap are split.
+ * Whether `line` begins a new paragraph after `prev` (the last line of `group`).
+ * Typeset documents (LaTeX papers, books) often separate paragraphs by a
+ * first-line indent or a short last line rather than vertical space, so all
+ * three signals count.
+ */
+function startsNewParagraph(group: readonly Line[], prev: Line, line: Line): boolean {
+  const gap = prev.y - line.y // baseline-to-baseline; positive going down
+  const spacing = Math.max(prev.height, line.height)
+  const sizeChange =
+    Math.max(prev.height, line.height) / Math.max(1e-6, Math.min(prev.height, line.height))
+  // Beside or above the previous line: a new column or a margin element.
+  if (gap <= 0) return true
+  // Vertical whitespace, or a font-size change (heading <-> body).
+  if (gap > spacing * 1.6 || sizeChange > 1.2) return true
+  const left = Math.min(...group.map((l) => l.left))
+  // Wildly different horizontal start: a different column or a figure label.
+  if (Math.abs(line.left - left) > spacing * 6) return true
+  // First-line indent.
+  if (line.left - left > line.height * 0.8) return true
+  // The previous line stopped well short of the paragraph's right edge: it was
+  // the paragraph's last line. Needs two lines to know where the edge is.
+  if (group.length >= 2) {
+    const right = Math.max(...group.map((l) => l.right))
+    if (right - prev.right > line.height * 3) return true
+  }
+  // Keep blocks under the cap by breaking between lines.
+  return groupLength(group) + line.text.length > MAX_PARAGRAPH_CHARS
+}
+
+/**
+ * Turn one page's lines into paragraphs (see startsNewParagraph). A paragraph
+ * is broken between lines before it exceeds the cap; a single over-long line is
+ * split at sentence breaks.
  */
 export function linesToParagraphs(lines: readonly Line[], page: number): PdfParagraph[] {
   const bodyHeight = median(lines.map((l) => l.height)) || 1
@@ -194,14 +245,7 @@ export function linesToParagraphs(lines: readonly Line[], page: number): PdfPara
 
   for (const line of lines) {
     const prev = group[group.length - 1]
-    if (prev) {
-      const gap = prev.y - line.y // baseline-to-baseline; positive going down
-      const sizeChange =
-        Math.max(prev.height, line.height) / Math.max(1e-6, Math.min(prev.height, line.height))
-      const spacing = Math.max(prev.height, line.height)
-      // gap <= 0: the line is beside or above the previous one (new column).
-      if (gap <= 0 || gap > spacing * 1.6 || sizeChange > 1.2) flush()
-    }
+    if (prev && startsNewParagraph(group, prev, line)) flush()
     group.push(line)
   }
   flush()

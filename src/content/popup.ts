@@ -145,7 +145,9 @@ export class Popup extends ShadowHost {
   private resizeObserver: ResizeObserver
   private readonly onViewportChange = (): void => this.reposition()
 
-  constructor() {
+  /** @param scroller The element that scrolls the document, when it isn't the
+   *  window (the PDF reader scrolls an inner container). */
+  constructor(private readonly scroller?: HTMLElement) {
     super(HOST_ID, STYLES)
     this.card = document.createElement('div')
     this.card.className = 'cl-card'
@@ -159,7 +161,8 @@ export class Popup extends ShadowHost {
 
   /** Anchor the popup to a term at a viewport point and attach it to the page. */
   showAt(x: number, y: number): void {
-    this.anchor = { x: x + window.scrollX, y: y + window.scrollY }
+    const scroll = this.scrollOffset()
+    this.anchor = { x: x + scroll.x, y: y + scroll.y }
     this.mount()
     this.reposition()
     // The term moves under the card when the page scrolls or reflows; follow it.
@@ -173,8 +176,9 @@ export class Popup extends ShadowHost {
    * and on every size change (the thread grows). */
   private reposition(): void {
     const GAP = 8
-    const ax = this.anchor.x - window.scrollX
-    const ay = this.anchor.y - window.scrollY
+    const scroll = this.scrollOffset()
+    const ax = this.anchor.x - scroll.x
+    const ay = this.anchor.y - scroll.y
     // Measured, not assumed: the card's width depends on its content.
     const maxTop = window.innerHeight - GAP - this.card.offsetHeight
     const maxLeft = window.innerWidth - GAP - this.card.offsetWidth
@@ -190,6 +194,12 @@ export class Popup extends ShadowHost {
 
     this.card.style.top = `${Math.max(GAP, top)}px`
     this.card.style.left = `${Math.max(GAP, Math.min(ax, maxLeft))}px`
+  }
+
+  private scrollOffset(): { x: number; y: number } {
+    return this.scroller
+      ? { x: this.scroller.scrollLeft, y: this.scroller.scrollTop }
+      : { x: window.scrollX, y: window.scrollY }
   }
 
   override remove(): void {

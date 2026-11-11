@@ -5,6 +5,7 @@ import {
   buildPdfHtml,
   groupLines,
   linesToParagraphs,
+  normalizeSelectionText,
   paragraphAt,
   type PdfTextItem,
 } from '@/pdf/structure'
@@ -147,5 +148,37 @@ describe('paragraphAt', () => {
       contextHint: hint,
     })
     expect(payload.localContext.text).toBe('Dropout appears here second.')
+  })
+})
+
+describe('normalizeSelectionText', () => {
+  it('reads a selection across wrapped lines as one phrase', () => {
+    expect(normalizeSelectionText('during training,\nwhich forces')).toBe(
+      'during training, which forces',
+    )
+    expect(normalizeSelectionText('contex-\ntual')).toBe('contextual')
+    expect(normalizeSelectionText('上下文\n感知')).toBe('上下文感知')
+  })
+})
+
+describe('typeset paragraphs', () => {
+  it('breaks paragraphs at a first-line indent with no vertical gap', () => {
+    const lines = groupLines([
+      line('First paragraph runs across the full column width here.', 700, 10, 50),
+      line('It ends on this shorter line.', 688, 10, 50),
+      line('Second paragraph starts indented.', 676, 10, 62),
+      line('And continues at the margin again with more words.', 664, 10, 50),
+    ])
+    const paras = linesToParagraphs(lines, 0)
+    expect(paras.map((p) => p.text.split(' ')[0])).toEqual(['First', 'Second'])
+  })
+
+  it('keeps a subscript on its line', () => {
+    const items: PdfTextItem[] = [
+      { str: 'set β', x: 50, y: 700, width: 25, height: 10, hasEOL: false },
+      { str: '2', x: 75, y: 697, width: 4, height: 7, hasEOL: false },
+      { str: 'to 0.95', x: 82, y: 700, width: 30, height: 10, hasEOL: true },
+    ]
+    expect(groupLines(items).map((l) => l.text)).toEqual(['set β2 to 0.95'])
   })
 })

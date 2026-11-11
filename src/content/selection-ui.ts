@@ -32,6 +32,11 @@ export interface DocumentSource {
   /** Set on extension pages, which receive triggers by broadcast: only a
    *  TRIGGER_SELECTION addressed to this tab is handled. */
   tabId?: number
+  /** The element that scrolls the document, when it isn't the window. */
+  scrollContainer?: HTMLElement
+  /** Clean up raw selection text before it is checked and explained (the PDF
+   *  text layer puts a line break wherever a phrase wraps). */
+  normalizeSelection?(text: string): string
 }
 
 /** A viewport point the popup is anchored to. */
@@ -76,10 +81,6 @@ function openSettings(): void {
   void chrome.runtime.sendMessage(msg)
 }
 
-function currentSelectionText(): string {
-  return (window.getSelection()?.toString() ?? '').trim()
-}
-
 /** A term worth offering the icon for: short and within one block. A long or
  *  multi-paragraph (contains a newline) selection is almost always copied text,
  *  not a term to explain, so we don't clutter it with an icon. */
@@ -108,6 +109,11 @@ export function startSelectionUi(source: DocumentSource): void {
   // disconnects it — the worker aborts its provider call on disconnect, so an
   // abandoned stream stops draining (and billing) the LLM.
   let activePort: chrome.runtime.Port | null = null
+
+  function currentSelectionText(): string {
+    const raw = window.getSelection()?.toString() ?? ''
+    return (source.normalizeSelection ? source.normalizeSelection(raw) : raw).trim()
+  }
 
   function closeActivePort(): void {
     activePort?.disconnect()
@@ -139,7 +145,7 @@ export function startSelectionUi(source: DocumentSource): void {
     // aborts it rather than draining to completion.
     closeActivePort()
     popup?.remove()
-    const active = new Popup()
+    const active = new Popup(source.scrollContainer)
     popup = active
     active.showAt(anchor.x, anchor.y)
     active.renderLoading(term)

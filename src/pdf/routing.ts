@@ -36,3 +36,11 @@ export function fileNameFromUrl(url: string): string {
     return url
   }
 }
+
+/** True when the first bytes of a response are a PDF. The header may sit after
+ *  some leading junk, which readers tolerate within the first 1 KB. */
+export function looksLikePdf(head: Uint8Array): boolean {
+  let text = ''
+  for (const b of head.subarray(0, 1024)) text += String.fromCharCode(b)
+  return text.includes('%PDF-')
+}
